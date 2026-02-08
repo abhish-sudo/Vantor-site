@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Register - Vantor{% endblock %}
+
+{% block content %}
+<section class="cart-container">
+    <div class="container">
+        <div style="max-width: 500px; margin: 0 auto;">
+            <h1 class="section-title text-center mb-lg">Create Account</h1>
+            
+            <div style="background-color: var(--color-white); padding: var(--space-lg);">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="form-group">
+                        {{ form.username.label_tag }}
+                        {{ form.username }}
+                        {{ form.username.errors }}
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md);">
+                        <div class="form-group">
+                            {{ form.first_name.label_tag }}
+                            {{ form.first_name }}
+                            {{ form.first_name.errors }}
+                        </div>
+                        <div class="form-group">
+                            {{ form.last_name.label_tag }}
+                            {{ form.last_name }}
+                            {{ form.last_name.errors }}
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        {{ form.email.label_tag }}
+                        {{ form.email }}
+                        {{ form.email.errors }}
+                    </div>
+                    
+                    <div class="form-group">
+                        {{ form.password1.label_tag }}
+                        {{ form.password1 }}
+                        {{ form.password1.errors }}
+                    </div>
+                    
+                    <div class="form-group">
+                        {{ form.password2.label_tag }}
+                        {{ form.password2 }}
+                        {{ form.password2.errors }}
+                    </div>
+                    
+                    <button type="submit" class="btn" style="width: 100%; margin-top: var(--space-md);">
+                        Create Account
+                    </button>
+                </form>
+                
+                <p class="text-center mt-md" style="color: var(--color-grey);">
+                    Already have an account? 
+                    <a href="{% url 'accounts:login' %}" style="color: var(--color-black); text-decoration: underline;">Login here</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

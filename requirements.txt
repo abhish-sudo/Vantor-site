@@ -1,0 +1,18 @@
+# Core Framework
+Django==5.0.1
+psycopg2-binary==2.9.9
+
+# Image Processing
+Pillow==10.2.0
+
+# Environment Management
+django-environ==0.11.2
+
+# Production Server (optional, for deployment)
+gunicorn==21.2.0
+
+# Security & Performance
+django-cors-headers==4.3.1
+
+# Development Tools (optional)
+django-debug-toolbar==4.2.0

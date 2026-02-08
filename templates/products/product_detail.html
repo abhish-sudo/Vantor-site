@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ product.name }} - Vantor{% endblock %}
+
+{% block content %}
+<section class="product-detail">
+    <div class="container">
+        <div class="product-detail-grid">
+            <!-- Product Gallery -->
+            <div class="product-gallery">
+                {% if product.get_main_image %}
+                <img src="{{ product.get_main_image.image.url }}" 
+                     alt="{{ product.name }}" 
+                     class="product-main-image"
+                     id="mainImage">
+                {% else %}
+                <div class="product-main-image" style="background-color: var(--color-off-white);"></div>
+                {% endif %}
+                
+                {% if product.images.count > 1 %}
+                <div class="product-thumbnails">
+                    {% for image in product.images.all %}
+                    <img src="{{ image.image.url }}" 
+                         alt="{{ product.name }}" 
+                         class="product-thumbnail {% if forloop.first %}active{% endif %}"
+                         onclick="changeImage('{{ image.image.url }}', this)">
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Product Details -->
+            <div class="product-details">
+                <h1 class="product-title">{{ product.name }}</h1>
+                
+                <div class="product-price-large">
+                    {% if product.is_on_sale %}
+                    <span class="price-compare">NPR {{ product.compare_at_price }}</span>
+                    <span class="price-sale">NPR {{ product.price }}</span>
+                    <span style="color: var(--color-accent); font-size: 1rem; margin-left: 1rem;">
+                        Save {{ product.discount_percentage }}%
+                    </span>
+                    {% else %}
+                    NPR {{ product.price }}
+                    {% endif %}
+                </div>
+                
+                <div class="product-description-full">
+                    <p>{{ product.description }}</p>
+                </div>
+                
+                {% if product.benefits %}
+                <div class="product-meta">
+                    <h4>Key Benefits</h4>
+                    <p>{{ product.benefits|linebreaks }}</p>
+                </div>
+                {% endif %}
+                
+                {% if product.how_to_use %}
+                <div class="product-meta">
+                    <h4>How to Use</h4>
+                    <p>{{ product.how_to_use|linebreaks }}</p>
+                </div>
+                {% endif %}
+                
+                {% if product.ingredients %}
+                <div class="product-meta">
+                    <h4>Ingredients</h4>
+                    <p>{{ product.ingredients }}</p>
+                </div>
+                {% endif %}
+                
+                <!-- Add to Cart Form -->
+                <form method="post" action="{% url 'cart:add' product.id %}">
+                    {% csrf_token %}
+                    
+                    <div class="quantity-selector">
+                        <label for="quantity">Quantity:</label>
+                        <input type="number" name="quantity" id="quantity" value="1" min="1" max="{{ product.stock_quantity }}">
+                        
+                        {% if product.stock_quantity < 10 %}
+                        <span style="color: var(--color-accent); font-size: 0.875rem;">
+                            Only {{ product.stock_quantity }} left in stock
+                        </span>
+                        {% endif %}
+                    </div>
+                    
+                    {% if product.is_in_stock %}
+                    <button type="submit" class="btn" style="width: 100%;">Add to Cart</button>
+                    {% else %}
+                    <button type="button" class="btn" style="width: 100%; opacity: 0.5;" disabled>
+                        Out of Stock
+                    </button>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+        
+        <!-- Related Products -->
+        {% if related_products %}
+        <div style="margin-top: var(--space-xl);">
+            <h2 class="section-title text-center">You May Also Like</h2>
+            <div class="product-grid" style="margin-top: var(--space-md);">
+                {% for related in related_products %}
+                <a href="{% url 'products:detail' related.slug %}" class="product-card">
+                    {% if related.get_main_image %}
+                    <img src="{{ related.get_main_image.image.url }}" 
+                         alt="{{ related.name }}" 
+                         class="product-image">
+                    {% endif %}
+                    <div class="product-info">
+                        <h3 class="product-name">{{ related.name }}</h3>
+                        <div class="product-price">NPR {{ related.price }}</div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function changeImage(src, element) {
+    document.getElementById('mainImage').src = src;
+    document.querySelectorAll('.product-thumbnail').forEach(thumb => {
+        thumb.classList.remove('active');
+    });
+    element.classList.add('active');
+}
+</script>
+{% endblock %}

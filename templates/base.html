@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Vantor - Premium Skincare{% endblock %}</title>
+    
+    <!-- Preconnect for performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Premium Typography: Cormorant Garamond for luxury + Inter for clean UI -->
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="container nav-container">
+            <a href="{% url 'products:home' %}" class="logo">
+                <span class="logo-text">VANTOR</span>
+            </a>
+            
+            <div class="nav-links">
+                <a href="{% url 'products:home' %}" class="nav-link">Home</a>
+                <a href="{% url 'products:list' %}" class="nav-link">Products</a>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'orders:list' %}" class="nav-link">Orders</a>
+                    <a href="{% url 'accounts:profile' %}" class="nav-link">Profile</a>
+                    <a href="{% url 'accounts:logout' %}" class="nav-link">Logout</a>
+                {% else %}
+                    <a href="{% url 'accounts:login' %}" class="nav-link">Login</a>
+                    <a href="{% url 'accounts:register' %}" class="nav-link">Register</a>
+                {% endif %}
+                <a href="{% url 'cart:detail' %}" class="nav-link cart-link">
+                    Cart <span class="cart-count">({{ cart.get_item_count }})</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="messages-container">
+        {% for message in messages %}
+        <div class="message message-{{ message.tags }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container footer-container">
+            <div class="footer-grid">
+                <div class="footer-column">
+                    <h3 class="footer-title">VANTOR</h3>
+                    <p class="footer-text">Premium Nepali skincare crafted with intention and care.</p>
+                </div>
+                
+                <div class="footer-column">
+                    <h4 class="footer-heading">Shop</h4>
+                    <ul class="footer-links">
+                        <li><a href="{% url 'products:list' %}">All Products</a></li>
+                        <li><a href="{% url 'products:list' %}">New Arrivals</a></li>
+                        <li><a href="{% url 'products:list' %}">Best Sellers</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-column">
+                    <h4 class="footer-heading">Account</h4>
+                    <ul class="footer-links">
+                        {% if user.is_authenticated %}
+                        <li><a href="{% url 'accounts:profile' %}">My Profile</a></li>
+                        <li><a href="{% url 'orders:list' %}">Order History</a></li>
+                        {% else %}
+                        <li><a href="{% url 'accounts:login' %}">Login</a></li>
+                        <li><a href="{% url 'accounts:register' %}">Create Account</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+                
+                <div class="footer-column">
+                    <h4 class="footer-heading">Contact</h4>
+                    <p class="footer-text">Kathmandu, Nepal</p>
+                    <p class="footer-text"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="89e0e7efe6c9ffe8e7fde6fba7eae6e4">[email&#160;protected]</a></p>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2026 Vantor. All rights 

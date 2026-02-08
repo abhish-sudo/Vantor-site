@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Products - Vantor{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+        <div class="section-header">
+            <h1 class="section-title">
+                {% if current_category %}{{ current_category.name }}{% else %}All Products{% endif %}
+            </h1>
+        </div>
+        
+        <div class="product-grid">
+            {% for product in products %}
+            <a href="{% url 'products:detail' product.slug %}" class="product-card">
+                {% if product.get_main_image %}
+                <img src="{{ product.get_main_image.image.url }}" 
+                     alt="{{ product.name }}" 
+                     class="product-image">
+                {% else %}
+                <div class="product-image" style="background-color: var(--color-off-white);"></div>
+                {% endif %}
+                
+                <div class="product-info">
+                    <h3 class="product-name">{{ product.name }}</h3>
+                    <p class="product-description">{{ product.short_description|truncatewords:15 }}</p>
+                    <div class="product-price">
+                        {% if product.is_on_sale %}
+                        <span class="price-compare">NPR {{ product.compare_at_price }}</span>
+                        <span class="price-sale">NPR {{ product.price }}</span>
+                        {% else %}
+                        NPR {{ product.price }}
+                        {% endif %}
+                    </div>
+                </div>
+            </a>
+            {% empty %}
+            <p class="text-center">No products found.</p>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

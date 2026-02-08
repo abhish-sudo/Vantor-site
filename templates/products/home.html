@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Vantor - Premium Nepali Skincare{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero">
+    <div class="container hero-content">
+        <h1 class="hero-title">Elevate Your Ritual</h1>
+        <p class="hero-subtitle">
+            Discover premium skincare rooted in Nepali tradition, crafted for the modern connoisseur.
+        </p>
+        <a href="{% url 'products:list' %}" class="btn">Explore Collection</a>
+    </div>
+</section>
+
+<!-- Featured Products -->
+<section class="section">
+    <div class="container">
+        <div class="section-header">
+            <h2 class="section-title">Featured Products</h2>
+            <p class="section-subtitle">
+                Our most coveted formulations, meticulously crafted for exceptional results.
+            </p>
+        </div>
+        
+        <div class="product-grid">
+            {% for product in products %}
+            <a href="{% url 'products:detail' product.slug %}" class="product-card">
+                {% if product.get_main_image %}
+                <img src="{{ product.get_main_image.image.url }}" 
+                     alt="{{ product.name }}" 
+                     class="product-image">
+                {% else %}
+                <div class="product-image" style="background-color: var(--color-off-white);"></div>
+                {% endif %}
+                
+                <div class="product-info">
+                    <h3 class="product-name">{{ product.name }}</h3>
+                    <p class="product-description">{{ product.short_description|truncatewords:12 }}</p>
+                    <div class="product-price">
+                        {% if product.is_on_sale %}
+                        <span class="price-compare">NPR {{ product.compare_at_price }}</span>
+                        <span class="price-sale">NPR {{ product.price }}</span>
+                        {% else %}
+                        NPR {{ product.price }}
+                        {% endif %}
+                    </div>
+                </div>
+            </a>
+            {% empty %}
+            <p class="text-center">No featured products available at the moment.</p>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- New Arrivals -->
+{% if new_arrivals %}
+<section class="section" style="background-color: var(--color-charcoal); color: var(--color-white);">
+    <div class="container">
+        <div class="section-header">
+            <h2 class="section-title" style="color: var(--color-white);">New Arrivals</h2>
+            <p class="section-subtitle" style="color: var(--color-grey-light);">
+                The latest additions to our carefully curated collection.
+            </p>
+        </div>
+        
+        <div class="product-grid">
+            {% for product in new_arrivals %}
+            <a href="{% url 'products:detail' product.slug %}" class="product-card">
+                {% if product.get_main_image %}
+                <img src="{{ product.get_main_image.image.url }}" 
+                     alt="{{ product.name }}" 
+                     class="product-image">
+                {% else %}
+                <div class="product-image" style="background-color: var(--color-off-white);"></div>
+                {% endif %}
+                
+                <div class="product-info">
+                    <h3 class="product-name">{{ product.name }}</h3>
+                    <p class="product-description">{{ product.short_description|truncatewords:12 }}</p>
+                    <div class="product-price">NPR {{ product.price }}</div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Brand Story -->
+<section class="section">
+    <div class="container">
+        <div style="max-width: 800px; margin: 0 auto; text-align: center;">
+            <h2 class="section-title">The Vantor Philosophy</h2>
+            <p style="font-size: 1.125rem; line-height: 1.8; color: var(--color-grey); margin-top: var(--space-md);">
+                Born from the intersection of Nepali botanical wisdom and contemporary skincare science, 
+                Vantor represents a commitment to quality, efficacy, and conscious formulation. 
+                Each product is a testament to our belief that skincare should be both a ritual and a revelation.
+            </p>
+            <a href="{% url 'products:list' %}" class="btn btn-outline mt-lg">Discover More</a>
+        </div>
+    </div>
+</section>
+{% endblock %}
