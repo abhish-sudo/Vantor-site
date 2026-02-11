@@ -16,3 +16,6 @@ django-cors-headers==4.3.1
 
 # Development Tools (optional)
 #django-debug-toolbar==4.2.0
+
+
+whitenoise==6.6.0
