@@ -1,3 +1,95 @@
+/* ===== Auth/Register Modern Styles ===== */
+.auth-footer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: var(--space-md);
+}
+
+.auth-divider {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    text-align: center;
+    color: var(--color-grey);
+    font-size: 0.95rem;
+    margin: 8px 0;
+}
+.auth-divider::before, .auth-divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid var(--color-grey-light);
+    margin: 0 0.5em;
+}
+.auth-divider span {
+    color: var(--color-grey-mid);
+    font-size: 0.9rem;
+    letter-spacing: 0.1em;
+}
+
+.google-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.85rem 0;
+    background: var(--color-black);
+    color: var(--color-white);
+    border: 1px solid var(--color-grey-dark);
+    border-radius: 4px;
+    font-size: 1rem;
+    font-family: var(--font-body);
+    font-weight: 500;
+    cursor: pointer;
+    transition: background var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    text-decoration: none;
+}
+.google-btn:hover {
+    background: var(--color-white);
+    color: var(--color-black);
+    border: 1px solid var(--color-black);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+}
+.google-btn__icon {
+    display: inline-block;
+    vertical-align: middle;
+}
+.google-btn__text {
+    font-size: 1rem;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+}
+
+.auth-login-link {
+    text-align: center;
+    color: var(--color-grey-mid);
+    font-size: 0.98rem;
+}
+.auth-login-link a {
+    background-color: #000000;
+
+    color: #ffffff;
+
+    padding: 14px;
+
+    border: 1px solid #000000;
+
+    font-size: 16px;
+
+    font-weight: 500;
+
+    cursor: pointer;
+
+    transition: all 0.3s ease;
+}
+.auth-login-link a:hover {
+    background-color: #ffffff;
+
+    color: #000000;
+}
 /* 
  * Vantor - Luxury Skincare Design System
  * Aesthetic: Matte black, minimal, premium
@@ -191,26 +283,27 @@ a:hover {
 }
 
 .btn {
-    display: inline-block;
-    padding: 1rem 2.5rem;
-    background-color: var(--color-white);
-    color: var(--color-black);
-    font-family: var(--font-body);
-    font-size: 0.875rem;
+    background-color: #000000;
+
+    color: #ffffff;
+
+    padding: 14px;
+
+    border: 1px solid #000000;
+
+    font-size: 16px;
+
     font-weight: 500;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    border: none;
-    border-radius: var(--border-radius);
+
     cursor: pointer;
-    transition: all var(--transition-medium);
+
+    transition: all 0.3s ease;
 }
 
 .btn:hover {
-    background-color: var(--color-off-white);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-    opacity: 1;
+    background-color: #ffffff;
+
+    color: #000000;
 }
 
 .btn-outline {

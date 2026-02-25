@@ -13,6 +13,7 @@ urlpatterns = [
     path('cart/', include('cart.urls', namespace='cart')),
     path('orders/', include('orders.urls', namespace='orders')),
     path('accounts/', include('accounts.urls', namespace='accounts')),
+    path('accounts/', include('allauth.urls')),
 ]
 
 # Serve media files in development

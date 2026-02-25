@@ -1,5 +1,8 @@
 {% extends 'base.html' %}
+{% load socialaccount %}
+
 {% load static %}
+
 
 {% block title %}Register - Vantor{% endblock %}
 
@@ -14,38 +17,37 @@
                     {% csrf_token %}
                     
                     <div class="form-group">
-                        {{ form.username.label_tag }}
+                        <span style="color: #555a60; font-weight: 600;">{{ form.username.label_tag }}</span>
                         {{ form.username }}
                         {{ form.username.errors }}
                     </div>
                     
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md);">
                         <div class="form-group">
-                            {{ form.first_name.label_tag }}
+                            <span style="color: #555a60; font-weight: 600;">{{ form.first_name.label_tag }}</span>
                             {{ form.first_name }}
                             {{ form.first_name.errors }}
                         </div>
                         <div class="form-group">
-                            {{ form.last_name.label_tag }}
+                            <span style="color: #555a60; font-weight: 600;">{{ form.last_name.label_tag }}</span>
                             {{ form.last_name }}
                             {{ form.last_name.errors }}
                         </div>
                     </div>
                     
                     <div class="form-group">
-                        {{ form.email.label_tag }}
+                        <span style="color: #555a60; font-weight: 600;">{{ form.email.label_tag }}</span>
                         {{ form.email }}
                         {{ form.email.errors }}
                     </div>
                     
                     <div class="form-group">
-                        {{ form.password1.label_tag }}
+                        <span style="color: #555a60; font-weight: 600;">{{ form.password1.label_tag }}</span>
                         {{ form.password1 }}
                         {{ form.password1.errors }}
                     </div>
-                    
                     <div class="form-group">
-                        {{ form.password2.label_tag }}
+                        <span style="color: #555a60; font-weight: 600;">{{ form.password2.label_tag }}</span>
                         {{ form.password2 }}
                         {{ form.password2.errors }}
                     </div>
@@ -55,10 +57,25 @@
                     </button>
                 </form>
                 
-                <p class="text-center mt-md" style="color: var(--color-grey);">
-                    Already have an account? 
-                    <a href="{% url 'accounts:login' %}" style="color: var(--color-black); text-decoration: underline;">Login here</a>
-                </p>
+                <div class="auth-footer">
+                    <div class="auth-divider">
+                        <span>or</span>
+                    </div>
+                    <a href="{% provider_login_url 'google' %}" class="google-btn">
+                        <svg class="google-btn__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="20" height="20">
+                            <path fill="#EA4335" d="M24 9.5c3.14 0 5.95 1.08 8.17 2.86l6.09-6.09C34.46 3.08 29.53 1 24 1 14.82 1 7.07 6.48 3.64 14.22l7.1 5.52C12.4 13.72 17.73 9.5 24 9.5z"/>
+                            <path fill="#4285F4" d="M46.5 24.5c0-1.64-.15-3.22-.42-4.75H24v9h12.68c-.55 2.97-2.22 5.48-4.73 7.17l7.27 5.65C43.18 37.54 46.5 31.5 46.5 24.5z"/>
+                            <path fill="#FBBC05" d="M10.74 28.26A14.57 14.57 0 0 1 9.5 24c0-1.49.26-2.93.74-4.26l-7.1-5.52A23.9 23.9 0 0 0 1 24c0 3.87.93 7.53 2.64 10.78l7.1-5.52z"/>
+                            <path fill="#34A853" d="M24 47c5.53 0 10.17-1.84 13.56-4.99l-7.27-5.65C28.44 37.6 26.33 38.5 24 38.5c-6.27 0-11.6-4.22-13.26-9.94l-7.1 5.52C7.07 41.52 14.82 47 24 47z"/>
+                        </svg>
+                        <span class="google-btn__text">Continue with Google</span>
+                    </a>
+                    <div class="auth-divider"></div>
+                    <div class="auth-login-link" style="color: #33383f; font-weight: 600;">
+                        Already have an account?
+                        <a href="{% url 'accounts:login' %}">Login here</a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
