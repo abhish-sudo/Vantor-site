@@ -18,4 +18,9 @@ urlpatterns = [
     
     # Individual order details
     path('<uuid:order_number>/', views.order_detail, name='detail'),
+
+    path('failure/', views.failure, name='failure'),  
+    path('success/', views.success, name='success'),
+    path("esewa-checkout/<uuid:order_number>/", views.esewa_checkout, name="esewa_checkout"),
+    
 ]

@@ -9,87 +9,22 @@
         <h1 class="section-title mb-lg">Checkout</h1>
         
         <div style="display: grid; grid-template-columns: 2fr 1fr; gap: var(--space-lg);">
-            <div>
-                <form method="post">
-                    {% csrf_token %}
-                    
-                    <h3 class="mb-md">Contact Information</h3>
-                    <div class="form-group">
-                        {{ form.email.label_tag }}
-                        {{ form.email }}
-                        {{ form.email.errors }}
-                    </div>
-                    
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md);">
-                        <div class="form-group">
-                            {{ form.first_name.label_tag }}
-                            {{ form.first_name }}
-                            {{ form.first_name.errors }}
-                        </div>
-                        <div class="form-group">
-                            {{ form.last_name.label_tag }}
-                            {{ form.last_name }}
-                            {{ form.last_name.errors }}
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        {{ form.phone.label_tag }}
-                        {{ form.phone }}
-                        {{ form.phone.errors }}
-                    </div>
-                    
-                    <h3 class="mb-md mt-lg">Shipping Address</h3>
-                    <div class="form-group">
-                        {{ form.address_line1.label_tag }}
-                        {{ form.address_line1 }}
-                        {{ form.address_line1.errors }}
-                    </div>
-                    
-                    <div class="form-group">
-                        {{ form.address_line2.label_tag }}
-                        {{ form.address_line2 }}
-                        {{ form.address_line2.errors }}
-                    </div>
-                    
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md);">
-                        <div class="form-group">
-                            {{ form.city.label_tag }}
-                            {{ form.city }}
-                            {{ form.city.errors }}
-                        </div>
-                        <div class="form-group">
-                            {{ form.state_province.label_tag }}
-                            {{ form.state_province }}
-                            {{ form.state_province.errors }}
-                        </div>
-                    </div>
-                    
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md);">
-                        <div class="form-group">
-                            {{ form.postal_code.label_tag }}
-                            {{ form.postal_code }}
-                            {{ form.postal_code.errors }}
-                        </div>
-                        <div class="form-group">
-                            {{ form.country.label_tag }}
-                            {{ form.country }}
-                            {{ form.country.errors }}
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        {{ form.notes.label_tag }}
-                        {{ form.notes }}
-                        {{ form.notes.errors }}
-                    </div>
-                    
-                    <button type="submit" class="btn" style="width: 100%; padding: 1.25rem;">
-                        Place Order
-                    </button>
-                </form>
-            </div>
-            
+            <!-- templates/checkout.html -->
+            <form action="https://rc-epay.esewa.com.np/api/epay/main/v2/form" method="POST">
+                <input type="hidden" name="amount" value="{{ product.price }}" required>
+                <input type="hidden" name="tax_amount" value="{{ tax_amount }}" required>
+                <input type="hidden" name="total_amount" value="{{ total_amount }}" required>
+                <input type="hidden" name="transaction_uuid" value="{{ transaction_uuid }}" required>
+                <input type="hidden" name="product_code" value="EPAYTEST" required>
+                <input type="hidden" name="product_service_charge" value="0" required>
+                <input type="hidden" name="product_delivery_charge" value="0" required>
+                <input type="hidden" name="success_url" value="http://localhost:8000/success/" required>
+                <input type="hidden" name="failure_url" value="http://localhost:8000/failure/" required>
+                <input type="hidden" name="signed_field_names" value="total_amount,transaction_uuid,product_code" required>
+                <input type="hidden" name="signature" value="{{ signature }}" required>
+                <input type="submit" value="Pay with eSewa">
+            </form>
+
             <div class="cart-summary">
                 <h3 class="mb-md">Order Summary</h3>
                 

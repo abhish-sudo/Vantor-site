@@ -69,3 +69,5 @@ def cart_update(request, product_id):
         messages.success(request, f'{product.name} removed from cart.')
     
     return redirect('cart:detail')
+
+

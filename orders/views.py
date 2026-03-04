@@ -9,6 +9,8 @@ from django.db import transaction
 from cart.cart import Cart
 from .models import Order, OrderItem
 from .forms import OrderCreateForm
+import uuid
+
 
 
 def checkout(request):
@@ -129,3 +131,52 @@ def order_detail(request, order_number):
     return render(request, 'orders/order_detail.html', {
         'order': order
     })
+
+import hmac
+import hashlib
+import base64
+
+def generate_signature(key, message):
+    key = key.encode('utf-8')
+    message = message.encode('utf-8')
+
+    hmac_sha256 = hmac.new(key, message, hashlib.sha256)
+    digest = hmac_sha256.digest()
+
+    #Convert the digest to a Base64-encoded string
+    signature = base64.b64encode(digest).decode('utf-8')
+
+    return signature
+
+from django.shortcuts import render
+from django.utils.crypto import get_random_string
+from products.models import Product
+
+def esewa_checkout(request, order_number):
+
+
+    order = Order.objects.get(order_number=order_number)
+    transaction_uuid = order.order_number
+    tax_amount = 0  
+    total_amount = 1000
+    secret_key = '8gBm/:&EnhH.1/q'
+    data_to_sign = f"total_amount={total_amount},transaction_uuid={transaction_uuid},product_code='EPAYTEST'"
+    result = generate_signature(secret_key, data_to_sign)
+
+    context = {
+        'order': order,
+        'tax_amount': tax_amount,
+        'total_amount': total_amount,
+        'transaction_uuid': transaction_uuid,
+        'product_delivery_charge': 0,
+        'product_service_charge': 0,
+        'signature': result,
+    }
+
+    return render(request, 'checkout.html', context)
+
+def success(request):
+    return render(request, 'success.html')
+
+def failure(request):
+    return render(request, 'failure.html')
