@@ -156,11 +156,12 @@ def esewa_checkout(request, order_number):
 
 
     order = Order.objects.get(order_number=order_number)
-    transaction_uuid = order.order_number
+    transaction_uuid = str(order.order_number)
+    product_code = "EPAYTEST"
     tax_amount = 0  
     total_amount = 1000
     secret_key = '8gBm/:&EnhH.1/q'
-    data_to_sign = f"total_amount={total_amount},transaction_uuid={transaction_uuid},product_code='EPAYTEST'"
+    data_to_sign = f"total_amount={total_amount},transaction_uuid={transaction_uuid},product_code={product_code}"
     result = generate_signature(secret_key, data_to_sign)
 
     context = {
