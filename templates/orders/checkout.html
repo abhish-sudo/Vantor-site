@@ -9,9 +9,8 @@
         <h1 class="section-title mb-lg">Checkout</h1>
         
         <div style="display: grid; grid-template-columns: 2fr 1fr; gap: var(--space-lg);">
-            <!-- templates/checkout.html -->
+            <!-- eSewa Payment Form -->
             <form action="https://rc-epay.esewa.com.np/api/epay/main/v2/form" method="POST">
-                <input type="hidden" name="amount" value="{{ product.price }}" required>
                 <input type="hidden" name="tax_amount" value="{{ tax_amount }}" required>
                 <input type="hidden" name="total_amount" value="{{ total_amount }}" required>
                 <input type="hidden" name="transaction_uuid" value="{{ transaction_uuid }}" required>
@@ -22,7 +21,7 @@
                 <input type="hidden" name="failure_url" value="http://localhost:8000/orders/failure/" required>
                 <input type="hidden" name="signed_field_names" value="total_amount,transaction_uuid,product_code" required>
                 <input type="hidden" name="signature" value="{{ signature }}" required>
-                <input type="submit" value="Pay with eSewa">
+                <input type="submit" value="Pay with eSewa" class="btn-primary">
             </form>
 
             <div class="cart-summary">

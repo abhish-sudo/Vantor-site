@@ -10,6 +10,11 @@ from cart.cart import Cart
 from .models import Order, OrderItem
 from .forms import OrderCreateForm
 import uuid
+import hmac
+import hashlib
+import base64
+from decimal import Decimal
+import os
 
 
 
@@ -132,52 +137,51 @@ def order_detail(request, order_number):
         'order': order
     })
 
-import hmac
-import hashlib
-import base64
 
 def generate_signature(key, message):
+    """Generate HMAC-SHA256 signature for eSewa payment"""
     key = key.encode('utf-8')
     message = message.encode('utf-8')
-
+    
     hmac_sha256 = hmac.new(key, message, hashlib.sha256)
     digest = hmac_sha256.digest()
-
-    #Convert the digest to a Base64-encoded string
+    
+    # Convert the digest to a Base64-encoded string
     signature = base64.b64encode(digest).decode('utf-8')
-
+    
     return signature
 
-from django.shortcuts import render
-from django.utils.crypto import get_random_string
-from products.models import Product
-
 def esewa_checkout(request, order_number):
-
-
-    order = Order.objects.get(order_number=order_number)
+    """eSewa payment checkout"""
+    try:
+        order = Order.objects.get(order_number=order_number)
+    except Order.DoesNotExist:
+        messages.error(request, 'Order not found.')
+        return redirect('products:home')
+    
+    secret_key = os.getenv('ESEWA_SECRET_KEY', '8gBm/:&EnhH.1/q')
+    product_code = os.getenv('ESEWA_PRODUCT_CODE', 'EPAYTEST')
+    
     transaction_uuid = str(order.order_number)
-    product_code = "EPAYTEST"
-    tax_amount = 0  
-    total_amount = 1000
-    secret_key = '8gBm/:&EnhH.1/q'
+    total_amount = str(Decimal(str(order.total)).quantize(Decimal('0.01')))
+    tax_amount = "0.00"
+    
     data_to_sign = f"total_amount={total_amount},transaction_uuid={transaction_uuid},product_code={product_code}"
-    result = generate_signature(secret_key, data_to_sign)
-
+    signature = generate_signature(secret_key, data_to_sign)
+    
     context = {
         'order': order,
         'tax_amount': tax_amount,
         'total_amount': total_amount,
         'transaction_uuid': transaction_uuid,
-        'product_delivery_charge': 0,
-        'product_service_charge': 0,
-        'signature': result,
+        'product_code': product_code,
+        'signature': signature,
     }
 
-    return render(request, 'checkout.html', context)
+    return render(request, 'orders/esewa_payment.html', context)
 
 def success(request):
-    return render(request, 'success.html')
+    return render(request, 'orders/success.html')
 
 def failure(request):
-    return render(request, 'failure.html')
+    return render(request, 'orders/failure.html')

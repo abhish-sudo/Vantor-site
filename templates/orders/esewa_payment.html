@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}eSewa Payment - Vantor{% endblock %}
+
+{% block content %}
+<section class="cart-container">
+    <div class="container">
+        <h1 class="section-title mb-lg">Secure Payment via eSewa</h1>
+        
+        <div style="max-width: 600px; margin: 0 auto;">
+            <!-- Order Summary -->
+            <div style="background-color: var(--color-white); padding: var(--space-lg); margin-bottom: var(--space-lg);">
+                <h3 class="mb-md">Order Summary</h3>
+                <p><strong>Order Number:</strong> {{ order.order_number }}</p>
+                
+                <div style="margin: var(--space-md) 0;">
+                    {% for item in order.items.all %}
+                    <div style="display: flex; justify-content: space-between; padding: var(--space-sm) 0; border-bottom: 1px solid #eee;">
+                        <span>{{ item.product_name }} × {{ item.quantity }}</span>
+                        <span>NPR {{ item.total_price }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <div style="border-top: 2px solid var(--color-black); padding-top: var(--space-md); margin-top: var(--space-md);">
+                    <div style="display: flex; justify-content: space-between; font-size: 1.25rem; font-weight: bold;">
+                        <span>Total Amount:</span>
+                        <span>NPR {{ total_amount }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- eSewa Payment Form -->
+            <form action="https://rc-epay.esewa.com.np/api/epay/main/v2/form" method="POST" style="background-color: var(--color-white); padding: var(--space-lg);">
+                <p class="mb-md">Click the button below to proceed securely to eSewa for payment.</p>
+                
+                <!-- Hidden Fields for eSewa -->
+                <input type="hidden" name="amount" value="{{ total_amount }}">
+                <input type="hidden" name="tax_amount" value="{{ tax_amount }}">
+                <input type="hidden" name="total_amount" value="{{ total_amount }}">
+                <input type="hidden" name="transaction_uuid" value="{{ transaction_uuid }}">
+                <input type="hidden" name="product_code" value="{{ product_code }}">
+                <input type="hidden" name="product_service_charge" value="0">
+                <input type="hidden" name="product_delivery_charge" value="0">
+                <input type="hidden" name="success_url" value="http://localhost:8000/orders/success/">
+                <input type="hidden" name="failure_url" value="http://localhost:8000/orders/failure/">
+                <input type="hidden" name="signed_field_names" value="total_amount,transaction_uuid,product_code">
+                <input type="hidden" name="signature" value="{{ signature }}">
+                
+                <button type="submit" class="btn" style="width: 100%; padding: var(--space-md); font-size: 1.125rem;">
+                    Proceed to eSewa Payment
+                </button>
+                
+                <a href="{% url 'orders:detail' order.order_number %}" class="btn btn-outline" style="width: 100%; margin-top: var(--space-md); text-align: center;">
+                    Cancel & Return to Order
+                </a>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}
