@@ -3,17 +3,68 @@
 
 {% block title %}eSewa Payment - Vantor{% endblock %}
 
+{% block extra_css %}
+<style>
+    .btn-esewa-pay {
+        width: 100%;
+        display: block;
+        padding: var(--space-md);
+        font-size: 0.875rem;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        text-align: center;
+        background-color: #60bb46;
+        color: #fff;
+        border: 1px solid #60bb46;
+        cursor: pointer;
+        font-family: 'Inter', sans-serif;
+        font-weight: 600;
+        transition: all 0.2s ease;
+    }
+
+    .btn-esewa-pay:hover {
+        background-color: transparent;
+        color: #60bb46;
+    }
+
+    .btn-cancel-order {
+        width: 100%;
+        display: block;
+        padding: var(--space-md);
+        font-size: 0.875rem;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        text-align: center;
+        background-color: transparent;
+        color: #c0392b;
+        border: 1px solid #c0392b;
+        margin-top: var(--space-sm);
+        font-family: 'Inter', sans-serif;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        box-sizing: border-box;
+    }
+
+    .btn-cancel-order:hover {
+        background-color: #c0392b;
+        color: #fff;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <section class="cart-container">
     <div class="container">
         <h1 class="section-title mb-lg">Secure Payment via eSewa</h1>
-        
+
         <div style="max-width: 600px; margin: 0 auto;">
+
             <!-- Order Summary -->
             <div style="background-color: var(--color-white); padding: var(--space-lg); margin-bottom: var(--space-lg);">
                 <h3 class="mb-md">Order Summary</h3>
                 <p><strong>Order Number:</strong> {{ order.order_number }}</p>
-                
+
                 <div style="margin: var(--space-md) 0;">
                     {% for item in order.items.all %}
                     <div style="display: flex; justify-content: space-between; padding: var(--space-sm) 0; border-bottom: 1px solid #eee;">
@@ -22,7 +73,7 @@
                     </div>
                     {% endfor %}
                 </div>
-                
+
                 <div style="border-top: 2px solid var(--color-black); padding-top: var(--space-md); margin-top: var(--space-md);">
                     <div style="display: flex; justify-content: space-between; font-size: 1.25rem; font-weight: bold;">
                         <span>Total Amount:</span>
@@ -33,28 +84,30 @@
 
             <!-- eSewa Payment Form -->
             <form action="https://rc-epay.esewa.com.np/api/epay/main/v2/form" method="POST" style="background-color: var(--color-white); padding: var(--space-lg);">
-                <p class="mb-md">Click the button below to proceed securely to eSewa for payment.</p>
-                
-                <!-- Hidden Fields for eSewa -->
-                
-                <input type="hidden" name="amount" value="{{ total_amount }}">          <!-- 👈 ADD THIS -->
+                <p class="mb-md" style="font-size: 0.875rem; color: #555;">
+                    Click the button below to proceed securely to eSewa for payment.
+                </p>
+
+                <input type="hidden" name="amount" value="{{ total_amount }}">
                 <input type="hidden" name="tax_amount" value="{{ tax_amount }}">
                 <input type="hidden" name="total_amount" value="{{ total_amount }}">
                 <input type="hidden" name="transaction_uuid" value="{{ transaction_uuid }}">
                 <input type="hidden" name="product_code" value="{{ product_code }}">
-                <input type="hidden" name="product_service_charge" value="0.00">        <!-- 👈 change to 0.00 -->
-                <input type="hidden" name="product_delivery_charge" value="0.00">       <!-- 👈 change to 0.00 -->
+                <input type="hidden" name="product_service_charge" value="0.00">
+                <input type="hidden" name="product_delivery_charge" value="0.00">
                 <input type="hidden" name="success_url" value="http://localhost:8000/orders/success/">
                 <input type="hidden" name="failure_url" value="http://localhost:8000/orders/failure/">
                 <input type="hidden" name="signed_field_names" value="total_amount,transaction_uuid,product_code">
                 <input type="hidden" name="signature" value="{{ signature }}">
-                <button type="submit" class="btn" style="width: 100%; padding: var(--space-md); font-size: 1.125rem;">
-                    Proceed to eSewa Payment
+
+                <button type="submit" class="btn-esewa-pay">
+                    ⊕ &nbsp;Proceed to eSewa Payment
                 </button>
-                
-                <a href="{% url 'orders:detail' order.order_number %}" class="btn btn-outline" style="width: 100%; margin-top: var(--space-md); text-align: center;">
-                    Cancel & Return to Order
+
+                <a href="{% url 'orders:list' %}" class="btn-cancel-order">
+                    ✕ &nbsp;Cancel & Return to Orders
                 </a>
+
             </form>
         </div>
     </div>

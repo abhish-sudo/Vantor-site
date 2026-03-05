@@ -13,5 +13,6 @@ urlpatterns = [
     path('success/', views.success, name='success'),
     path('failure/', views.failure, name='failure'),
     path('my-orders/', views.order_list, name='list'),
-    path('<uuid:order_number>/', views.order_detail, name='detail'),  # keep last!
+    path('<uuid:order_number>/', views.order_detail, name='detail'),  
+    path('cancel/<uuid:order_number>/', views.cancel_order, name='cancel_order'),
 ]

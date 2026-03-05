@@ -1,19 +1,473 @@
-<h1>My Orders</h1>
+{% extends 'base.html' %}
+{% load static %}
 
-{% for order in orders %}
+{% block title %}My Orders - Vantor{% endblock %}
 
-<p>
+{% block extra_css %}
+<style>
+    .orders-wrapper {
+        padding: var(--space-xl) 0;
+        max-width: 900px;
+        margin: 0 auto;
+    }
 
-Order ID: {{ order.id }}
+    .orders-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: var(--space-xl);
+        padding-bottom: var(--space-md);
+        border-bottom: 2px solid #111;
+    }
 
-Status: {{ order.status }}
+    .orders-title {
+        font-family: 'Cormorant Garamond', serif;
+        font-size: 2.5rem;
+        font-weight: 300;
+        letter-spacing: 0.05em;
+        color: #111;
+    }
 
-Total: Rs. {{ order.total_price }}
+    .orders-count {
+        font-size: 0.75rem;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: #444;
+        font-weight: 500;
+    }
 
-</p>
+    .order-card {
+        border: 1px solid #ddd;
+        background-color: #fff;
+        margin-bottom: var(--space-md);
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
 
-{% empty %}
+    .order-card:hover {
+        border-color: #111;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
 
-<p>No orders found.</p>
+    .order-card-header {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr 1fr;
+        gap: var(--space-md);
+        align-items: center;
+        padding: var(--space-md) var(--space-lg);
+        border-bottom: 1px solid #eee;
+        background-color: #fafafa;
+    }
 
-{% endfor %}
+    .order-meta-label {
+        font-size: 0.65rem;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: #666;
+        margin-bottom: 5px;
+        font-weight: 600;
+    }
+
+    .order-meta-value {
+        font-size: 0.9rem;
+        color: #111;
+        font-weight: 600;
+    }
+
+    .order-meta-value.order-number {
+        font-family: 'Cormorant Garamond', serif;
+        font-size: 1rem;
+        font-weight: 500;
+        word-break: break-all;
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 5px 10px;
+        font-size: 0.65rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        font-weight: 700;
+        border-radius: 2px;
+    }
+
+    .badge-dot {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background-color: currentColor;
+        flex-shrink: 0;
+    }
+
+    .status-paid       { background: #e8f5e9; color: #1b5e20; border: 1px solid #81c784; }
+    .status-pending    { background: #fff3e0; color: #bf360c; border: 1px solid #ffb74d; }
+    .status-processing { background: #e3f2fd; color: #0d47a1; border: 1px solid #64b5f6; }
+    .status-shipped    { background: #f3e5f5; color: #4a148c; border: 1px solid #ce93d8; }
+    .status-delivered  { background: #e8f5e9; color: #1b5e20; border: 1px solid #66bb6a; }
+    .status-cancelled  { background: #ffebee; color: #b71c1c; border: 1px solid #ef9a9a; }
+
+    .order-card-items {
+        padding: var(--space-md) var(--space-lg);
+    }
+
+    .order-item-preview {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid #f0f0f0;
+        font-size: 0.9rem;
+    }
+
+    .order-item-preview:last-child { border-bottom: none; }
+
+    .order-item-name  { color: #222; font-weight: 500; }
+    .order-item-qty   { font-size: 0.8rem; color: #666; margin-left: 6px; font-weight: 400; }
+    .order-item-price { color: #111; font-weight: 600; }
+
+    .order-card-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: var(--space-sm) var(--space-lg);
+        background-color: #f5f5f5;
+        border-top: 1px solid #eee;
+    }
+
+    .order-footer-left {
+        display: flex;
+        align-items: center;
+        gap: var(--space-md);
+    }
+
+    .order-total-wrap {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .order-total-label {
+        font-size: 0.65rem;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: #555;
+        font-weight: 600;
+        margin-bottom: 2px;
+    }
+
+    .order-total-value { font-size: 1.1rem; font-weight: 700; color: #111; }
+
+    .order-payment-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 10px;
+        font-size: 0.65rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        font-weight: 600;
+        border-radius: 2px;
+    }
+
+    .chip-esewa { background-color: #e8f5e9; color: #1b5e20; border: 1px solid #81c784; }
+    .chip-cod   { background-color: #fff3e0; color: #bf360c; border: 1px solid #ffb74d; }
+
+    /* Cancel button */
+    .btn-cancel {
+        background: transparent;
+        color: #c0392b;
+        border: 1px solid #c0392b;
+        padding: 7px 16px;
+        font-size: 0.65rem;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        font-weight: 600;
+        font-family: 'Inter', sans-serif;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .btn-cancel:hover {
+        background-color: #c0392b;
+        color: #fff;
+    }
+
+    /* Cancel confirmation modal */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background-color: rgba(0,0,0,0.5);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal-overlay.active {
+        display: flex;
+    }
+
+    .modal-box {
+        background: #fff;
+        padding: var(--space-xl);
+        max-width: 420px;
+        width: 90%;
+        text-align: center;
+        position: relative;
+    }
+
+    .modal-box::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 3px;
+        background-color: #c0392b;
+    }
+
+    .modal-icon {
+        font-size: 2rem;
+        margin-bottom: var(--space-md);
+        color: #c0392b;
+    }
+
+    .modal-title {
+        font-family: 'Cormorant Garamond', serif;
+        font-size: 1.75rem;
+        font-weight: 300;
+        color: #111;
+        margin-bottom: var(--space-sm);
+    }
+
+    .modal-text {
+        font-size: 0.875rem;
+        color: #555;
+        line-height: 1.7;
+        margin-bottom: var(--space-lg);
+    }
+
+    .modal-actions {
+        display: flex;
+        gap: var(--space-sm);
+    }
+
+    .modal-btn {
+        flex: 1;
+        padding: 12px;
+        font-size: 0.75rem;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        font-family: 'Inter', sans-serif;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: none;
+    }
+
+    .modal-btn-confirm {
+        background-color: #c0392b;
+        color: #fff;
+        border: 1px solid #c0392b;
+    }
+
+    .modal-btn-confirm:hover {
+        background-color: transparent;
+        color: #c0392b;
+    }
+
+    .modal-btn-dismiss {
+        background-color: transparent;
+        color: #111;
+        border: 1px solid #ddd;
+    }
+
+    .modal-btn-dismiss:hover {
+        border-color: #111;
+    }
+
+    /* Bottom actions */
+    .orders-actions {
+        display: flex;
+        gap: var(--space-sm);
+        margin-top: var(--space-lg);
+    }
+
+    .btn-action {
+        display: inline-block;
+        padding: 12px 28px;
+        font-size: 0.75rem;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        font-family: 'Inter', sans-serif;
+        font-weight: 500;
+    }
+
+    .btn-dark {
+        background-color: #111;
+        color: #fff;
+        border: 1px solid #111;
+    }
+
+    .btn-dark:hover {
+        background-color: transparent;
+        color: #111;
+    }
+
+    /* Empty state */
+    .empty-orders {
+        text-align: center;
+        padding: var(--space-xl) var(--space-md);
+        border: 1px dashed #ccc;
+        background-color: #fff;
+    }
+
+    .empty-orders-icon  { font-size: 2.5rem; margin-bottom: var(--space-md); opacity: 0.25; }
+    .empty-orders-title { font-family: 'Cormorant Garamond', serif; font-size: 1.75rem; font-weight: 300; margin-bottom: var(--space-sm); color: #333; }
+    .empty-orders-text  { font-size: 0.875rem; color: #666; margin-bottom: var(--space-lg); }
+
+    @media (max-width: 768px) {
+        .order-card-header  { grid-template-columns: 1fr 1fr; gap: var(--space-sm); }
+        .orders-actions     { flex-direction: column; }
+        .order-card-footer  { flex-direction: column; align-items: flex-start; gap: var(--space-sm); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="cart-container">
+    <div class="container">
+        <div class="orders-wrapper">
+
+            <div class="orders-header">
+                <h1 class="orders-title">My Orders</h1>
+                <span class="orders-count">{{ orders.count }} order{{ orders.count|pluralize }}</span>
+            </div>
+
+            {% if orders %}
+                {% for order in orders %}
+                <div class="order-card">
+
+                    <div class="order-card-header">
+                        <div>
+                            <p class="order-meta-label">Order Number</p>
+                            <p class="order-meta-value order-number">{{ order.order_number }}</p>
+                        </div>
+                        <div>
+                            <p class="order-meta-label">Date</p>
+                            <p class="order-meta-value">{{ order.created_at|date:"M d, Y" }}</p>
+                            <p style="font-size: 0.65rem; color: #888; margin-top: 2px;">
+                                {{ order.created_at|time:"h:i A" }}
+                            </p>
+                        </div>
+                        <div>
+                            <p class="order-meta-label">Status</p>
+                            <span class="status-badge status-{{ order.status }}">
+                                <span class="badge-dot"></span>
+                                {{ order.get_status_display }}
+                            </span>
+                        </div>
+                        <div style="text-align: right;">
+                            <p class="order-meta-label">Amount</p>
+                            <p class="order-meta-value">NPR {{ order.total }}</p>
+                        </div>
+                    </div>
+
+                    <div class="order-card-items">
+                        {% for item in order.items.all %}
+                        <div class="order-item-preview">
+                            <span class="order-item-name">
+                                {{ item.product_name }}
+                                <span class="order-item-qty">× {{ item.quantity }}</span>
+                            </span>
+                            <span class="order-item-price">NPR {{ item.total_price }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="order-card-footer">
+                        <div class="order-footer-left">
+                            <div class="order-total-wrap">
+                                <span class="order-total-label">Total</span>
+                                <span class="order-total-value">NPR {{ order.total }}</span>
+                            </div>
+                            {% if order.is_paid %}
+                                <span class="order-payment-chip chip-esewa">✓ Paid via eSewa</span>
+                            {% else %}
+                                <span class="order-payment-chip chip-cod">◎ Cash on Delivery</span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Cancel button — only for pending or cod orders -->
+                        {% if order.status == 'pending' %}
+                        <button
+                            class="btn-cancel"
+                            onclick="openCancelModal('{{ order.order_number }}')"
+                        >
+                            Cancel Order
+                        </button>
+                        {% endif %}
+                    </div>
+
+                </div>
+                {% endfor %}
+
+                <div class="orders-actions">
+                    <a href="{% url 'products:list' %}" class="btn-action btn-dark">
+                        Continue Shopping
+                    </a>
+                </div>
+
+            {% else %}
+                <div class="empty-orders">
+                    <div class="empty-orders-icon">◎</div>
+                    <h2 class="empty-orders-title">No orders yet</h2>
+                    <p class="empty-orders-text">You haven't placed any orders yet. Start shopping!</p>
+                    <a href="{% url 'products:list' %}" class="btn-action btn-dark">Browse Products</a>
+                </div>
+            {% endif %}
+
+        </div>
+    </div>
+</section>
+
+<!-- Cancel Confirmation Modal -->
+<div class="modal-overlay" id="cancelModal">
+    <div class="modal-box">
+        <div class="modal-icon">✕</div>
+        <h2 class="modal-title">Cancel Order?</h2>
+        <p class="modal-text">
+            Are you sure you want to cancel this order?
+            This action cannot be undone.
+        </p>
+        <div class="modal-actions">
+            <button class="modal-btn modal-btn-dismiss" onclick="closeCancelModal()">
+                Keep Order
+            </button>
+            <form id="cancelForm" method="POST" action="" style="flex: 1;">
+                {% csrf_token %}
+                <button type="submit" class="modal-btn modal-btn-confirm" style="width: 100%;">
+                    Yes, Cancel
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openCancelModal(orderNumber) {
+        document.getElementById('cancelForm').action = '/orders/cancel/' + orderNumber + '/';
+        document.getElementById('cancelModal').classList.add('active');
+    }
+
+    function closeCancelModal() {
+        document.getElementById('cancelModal').classList.remove('active');
+    }
+
+    // Close modal if clicking outside
+    document.getElementById('cancelModal').addEventListener('click', function(e) {
+        if (e.target === this) closeCancelModal();
+    });
+</script>
+
+{% endblock %}

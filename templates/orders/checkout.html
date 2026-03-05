@@ -3,56 +3,329 @@
 
 {% block title %}Checkout - Vantor{% endblock %}
 
+{% block extra_css %}
+<style>
+    .checkout-grid {
+        display: grid;
+        grid-template-columns: 1.4fr 1fr;
+        gap: var(--space-lg);
+        align-items: start;
+        max-width: 1100px;
+        margin: 0 auto;
+    }
+
+    .form-section {
+        border: 1px solid rgba(0,0,0,0.12);
+        padding: var(--space-lg);
+        margin-bottom: var(--space-md);
+        background-color: #fff;
+    }
+
+    .form-section-title {
+        font-size: 0.7rem;
+        letter-spacing: 0.25em;
+        text-transform: uppercase;
+        color: #222;
+        margin-bottom: var(--space-md);
+        padding-bottom: var(--space-sm);
+        border-bottom: 1px solid rgba(0,0,0,0.08);
+        font-weight: 600;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+
+    .form-row-full {
+        margin-bottom: 10px;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 12px 14px;
+        border: 1px solid #ddd;
+        background-color: #fafafa;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.875rem;
+        color: #111;
+        outline: none;
+        transition: border-color 0.2s ease, background-color 0.2s ease;
+        box-sizing: border-box;
+    }
+
+    .form-input:focus {
+        border-color: #111;
+        background-color: #fff;
+    }
+
+    .form-input::placeholder {
+        color: #aaa;
+        font-size: 0.8125rem;
+    }
+
+    textarea.form-input {
+        resize: none;
+    }
+
+    .errorlist {
+        list-style: none;
+        padding: 0;
+        margin: 3px 0 0;
+        font-size: 0.75rem;
+        color: #c0392b;
+    }
+
+    /* Order Summary Box */
+    .order-summary-box {
+        border: 1px solid rgba(0,0,0,0.12);
+        padding: var(--space-lg);
+        background-color: #fff;
+        position: sticky;
+        top: 20px;
+    }
+
+    .summary-title {
+        font-size: 0.7rem;
+        letter-spacing: 0.25em;
+        text-transform: uppercase;
+        color: #222;
+        margin-bottom: var(--space-md);
+        padding-bottom: var(--space-sm);
+        border-bottom: 1px solid rgba(0,0,0,0.08);
+        font-weight: 600;
+    }
+
+    .summary-item {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        font-size: 0.875rem;
+        color: #333;
+    }
+
+    .summary-item span:first-child {
+        max-width: 65%;
+        opacity: 0.8;
+    }
+
+    .summary-divider {
+        border: none;
+        border-top: 1px solid #eee;
+        margin: var(--space-sm) 0;
+    }
+
+    .summary-total {
+        display: flex;
+        justify-content: space-between;
+        font-size: 1rem;
+        font-weight: 600;
+        margin-top: var(--space-sm);
+        margin-bottom: var(--space-lg);
+        color: #111;
+    }
+
+    .summary-free {
+        font-size: 0.75rem;
+        color: #60bb46;
+        font-weight: 500;
+    }
+
+    /* Payment Buttons */
+    .payment-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: var(--space-md);
+    }
+
+    .btn-payment {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 13px;
+        font-size: 0.75rem;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-family: 'Inter', sans-serif;
+        font-weight: 500;
+    }
+
+    .btn-esewa {
+        background-color: #60bb46;
+        color: #fff;
+        border: 1px solid #60bb46;
+    }
+
+    .btn-esewa:hover {
+        background-color: transparent;
+        color: #60bb46;
+    }
+
+    .btn-cod {
+        background-color: #111;
+        color: #fff;
+        border: 1px solid #111;
+    }
+
+    .btn-cod:hover {
+        background-color: transparent;
+        color: #111;
+    }
+
+    .payment-divider {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: #ccc;
+        font-size: 0.7rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+    }
+
+    .payment-divider::before,
+    .payment-divider::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background-color: #ddd;
+    }
+
+    @media (max-width: 768px) {
+        .checkout-grid { grid-template-columns: 1fr; }
+        .form-row { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <section class="cart-container">
     <div class="container">
         <h1 class="section-title mb-lg">Checkout</h1>
-        
-        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: var(--space-lg);">
-            <!-- eSewa Payment Form -->
-            <div>
-                <form method="POST">
-                    {% csrf_token %}
-                    {{ form.as_p }}
-                    
-                    <!-- This button saves the order and redirects to esewa_payment.html -->
-                    <button type="submit" class="btn-primary">
-                        Proceed to Payment
-                    </button>
-                </form>
-            </div>
-            <div class="cart-summary">
-                <h3 class="mb-md">Order Summary</h3>
-                
-                {% for item in cart %}
-                <div style="display: flex; justify-content: space-between; margin-bottom: var(--space-sm); font-size: 0.875rem;">
-                    <span>{{ item.product.name }} × {{ item.quantity }}</span>
-                    <span>NPR {{ item.total_price }}</span>
+
+        <form method="POST">
+            {% csrf_token %}
+
+            <div class="checkout-grid">
+
+                <!-- LEFT: Form Fields -->
+                <div>
+
+                    <!-- Contact Info -->
+                    <div class="form-section">
+                        <p class="form-section-title">Contact Information</p>
+                        <div class="form-row">
+                            <div>
+                                {{ form.first_name }}
+                                {{ form.first_name.errors }}
+                            </div>
+                            <div>
+                                {{ form.last_name }}
+                                {{ form.last_name.errors }}
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div>
+                                {{ form.email }}
+                                {{ form.email.errors }}
+                            </div>
+                            <div>
+                                {{ form.phone }}
+                                {{ form.phone.errors }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Delivery Address -->
+                    <div class="form-section">
+                        <p class="form-section-title">Delivery Address</p>
+
+                        <div class="form-row-full">
+                            {{ form.address_line1 }}
+                            {{ form.address_line1.errors }}
+                        </div>
+                        <div class="form-row-full">
+                            {{ form.address_line2 }}
+                        </div>
+                        <div class="form-row">
+                            <div>
+                                {{ form.city }}
+                                {{ form.city.errors }}
+                            </div>
+                            <div>
+                                {{ form.state_province }}
+                                {{ form.state_province.errors }}
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div>
+                                {{ form.postal_code }}
+                                {{ form.postal_code.errors }}
+                            </div>
+                            <div>
+                                {{ form.country }}
+                                {{ form.country.errors }}
+                            </div>
+                        </div>
+                        <div class="form-row-full">
+                            {{ form.notes }}
+                        </div>
+                    </div>
+
                 </div>
-                {% endfor %}
-                
-                <div style="border-top: 1px solid rgba(255,255,255,0.2); margin: var(--space-md) 0;"></div>
-                
-                <div style="display: flex; justify-content: space-between; margin-bottom: var(--space-sm);">
-                    <span>Subtotal:</span>
-                    <span>NPR {{ cart.get_total_price }}</span>
-                </div>
-                
-                <div style="display: flex; justify-content: space-between; margin-bottom: var(--space-sm);">
-                    <span>Shipping:</span>
-                    <span>Free</span>
-                </div>
-                
-                <div style="border-top: 1px solid rgba(255,255,255,0.2); padding-top: var(--space-sm);"></div>
-                
-                <div class="cart-total">
-                    <div style="display: flex; justify-content: space-between;">
-                        <span>Total:</span>
+
+                <!-- RIGHT: Order Summary + Payment Buttons -->
+                <div class="order-summary-box">
+                    <p class="summary-title">Order Summary</p>
+
+                    {% for item in cart %}
+                    <div class="summary-item">
+                        <span>{{ item.product.name }} × {{ item.quantity }}</span>
+                        <span>NPR {{ item.total_price }}</span>
+                    </div>
+                    {% endfor %}
+
+                    <hr class="summary-divider">
+
+                    <div class="summary-item">
+                        <span>Subtotal</span>
                         <span>NPR {{ cart.get_total_price }}</span>
                     </div>
+                    <div class="summary-item">
+                        <span>Shipping</span>
+                        <span class="summary-free">Free</span>
+                    </div>
+
+                    <hr class="summary-divider">
+
+                    <div class="summary-total">
+                        <span>Total</span>
+                        <span>NPR {{ cart.get_total_price }}</span>
+                    </div>
+
+                    <!-- Payment Buttons inside summary -->
+                    <div class="payment-buttons">
+                        <button type="submit" name="payment_method" value="esewa" class="btn-payment btn-esewa">
+                            ⊕ &nbsp;Pay with eSewa
+                        </button>
+                        <div class="payment-divider">or</div>
+                        <button type="submit" name="payment_method" value="cod" class="btn-payment btn-cod">
+                            ◎ &nbsp;Cash on Delivery
+                        </button>
+                    </div>
+
                 </div>
+
             </div>
-        </div>
+        </form>
+
     </div>
 </section>
 {% endblock %}
