@@ -1,2 +1,175 @@
-<h1>Success!</h1>
-<p>Your payment was successful. Thank you for your purchase!</p>
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Payment Successful - Vantor{% endblock %}
+
+{% block extra_css %}
+<style>
+    .success-wrapper {
+        min-height: 70vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: var(--space-xl) var(--space-md);
+    }
+
+    .success-card {
+        max-width: 560px;
+        width: 100%;
+        text-align: center;
+        padding: var(--space-xl);
+        background-color: var(--color-white);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .success-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background-color: var(--color-black);
+    }
+
+    .success-icon-wrapper {
+        width: 80px;
+        height: 80px;
+        border: 2px solid var(--color-black);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto var(--space-lg);
+        animation: scaleIn 0.5s ease forwards;
+    }
+
+    .success-icon {
+        font-size: 2rem;
+        animation: fadeIn 0.4s ease 0.3s both;
+    }
+
+    .success-title {
+        font-family: 'Cormorant Garamond', serif;
+        font-size: 2.5rem;
+        font-weight: 300;
+        letter-spacing: 0.05em;
+        margin-bottom: var(--space-sm);
+        animation: slideUp 0.5s ease 0.2s both;
+    }
+
+    .success-subtitle {
+        font-size: 0.875rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        opacity: 0.5;
+        margin-bottom: var(--space-lg);
+        animation: slideUp 0.5s ease 0.3s both;
+    }
+
+    .success-divider {
+        width: 40px;
+        height: 1px;
+        background-color: var(--color-black);
+        margin: var(--space-lg) auto;
+        opacity: 0.2;
+    }
+
+    .success-message {
+        font-size: 0.9375rem;
+        line-height: 1.8;
+        opacity: 0.7;
+        margin-bottom: var(--space-xl);
+        animation: slideUp 0.5s ease 0.4s both;
+    }
+
+    .success-actions {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-sm);
+        animation: slideUp 0.5s ease 0.5s both;
+    }
+
+    .btn-full {
+        width: 100%;
+        display: block;
+        padding: var(--space-md);
+        text-align: center;
+        font-size: 0.8125rem;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+
+    .btn-dark {
+        background-color: var(--color-black);
+        color: var(--color-white);
+        border: 1px solid var(--color-black);
+    }
+
+    .btn-dark:hover {
+        background-color: transparent;
+        color: var(--color-black);
+    }
+
+    .btn-ghost {
+        background-color: transparent;
+        color: var(--color-black);
+        border: 1px solid rgba(0,0,0,0.2);
+    }
+
+    .btn-ghost:hover {
+        border-color: var(--color-black);
+    }
+
+    @keyframes scaleIn {
+        from { transform: scale(0.8); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @keyframes slideUp {
+        from { transform: translateY(16px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="success-wrapper">
+    <div class="success-card">
+
+        <div class="success-icon-wrapper">
+            <span class="success-icon">✓</span>
+        </div>
+
+        <h1 class="success-title">Payment Successful</h1>
+        <p class="success-subtitle">Order Confirmed</p>
+
+        <div class="success-divider"></div>
+
+        <p class="success-message">
+            Thank you for your purchase. Your order has been received and is being processed. 
+            You will receive a confirmation shortly.
+        </p>
+
+        <div class="success-actions">
+            <a href="{% url 'products:home' %}" class="btn-full btn-dark">
+                Return to Home
+            </a>
+            {% if user.is_authenticated %}
+            <a href="{% url 'orders:list' %}" class="btn-full btn-ghost">
+                View My Orders
+            </a>
+            {% endif %}
+        </div>
+
+    </div>
+</section>
+{% endblock %}

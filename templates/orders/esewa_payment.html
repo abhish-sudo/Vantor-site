@@ -36,18 +36,18 @@
                 <p class="mb-md">Click the button below to proceed securely to eSewa for payment.</p>
                 
                 <!-- Hidden Fields for eSewa -->
-                <input type="hidden" name="amount" value="{{ total_amount }}">
+                
+                <input type="hidden" name="amount" value="{{ total_amount }}">          <!-- 👈 ADD THIS -->
                 <input type="hidden" name="tax_amount" value="{{ tax_amount }}">
                 <input type="hidden" name="total_amount" value="{{ total_amount }}">
                 <input type="hidden" name="transaction_uuid" value="{{ transaction_uuid }}">
                 <input type="hidden" name="product_code" value="{{ product_code }}">
-                <input type="hidden" name="product_service_charge" value="0">
-                <input type="hidden" name="product_delivery_charge" value="0">
+                <input type="hidden" name="product_service_charge" value="0.00">        <!-- 👈 change to 0.00 -->
+                <input type="hidden" name="product_delivery_charge" value="0.00">       <!-- 👈 change to 0.00 -->
                 <input type="hidden" name="success_url" value="http://localhost:8000/orders/success/">
                 <input type="hidden" name="failure_url" value="http://localhost:8000/orders/failure/">
                 <input type="hidden" name="signed_field_names" value="total_amount,transaction_uuid,product_code">
                 <input type="hidden" name="signature" value="{{ signature }}">
-                
                 <button type="submit" class="btn" style="width: 100%; padding: var(--space-md); font-size: 1.125rem;">
                     Proceed to eSewa Payment
                 </button>

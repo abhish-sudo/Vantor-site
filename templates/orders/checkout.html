@@ -10,20 +10,17 @@
         
         <div style="display: grid; grid-template-columns: 2fr 1fr; gap: var(--space-lg);">
             <!-- eSewa Payment Form -->
-            <form action="https://rc-epay.esewa.com.np/api/epay/main/v2/form" method="POST">
-                <input type="hidden" name="tax_amount" value="{{ tax_amount }}" required>
-                <input type="hidden" name="total_amount" value="{{ total_amount }}" required>
-                <input type="hidden" name="transaction_uuid" value="{{ transaction_uuid }}" required>
-                <input type="hidden" name="product_code" value="EPAYTEST" required>
-                <input type="hidden" name="product_service_charge" value="0" required>
-                <input type="hidden" name="product_delivery_charge" value="0" required>
-                <input type="hidden" name="success_url" value="http://localhost:8000/orders/success/" required>
-                <input type="hidden" name="failure_url" value="http://localhost:8000/orders/failure/" required>
-                <input type="hidden" name="signed_field_names" value="total_amount,transaction_uuid,product_code" required>
-                <input type="hidden" name="signature" value="{{ signature }}" required>
-                <input type="submit" value="Pay with eSewa" class="btn-primary">
-            </form>
-
+            <div>
+                <form method="POST">
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                    
+                    <!-- This button saves the order and redirects to esewa_payment.html -->
+                    <button type="submit" class="btn-primary">
+                        Proceed to Payment
+                    </button>
+                </form>
+            </div>
             <div class="cart-summary">
                 <h3 class="mb-md">Order Summary</h3>
                 

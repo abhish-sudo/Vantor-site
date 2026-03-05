@@ -70,7 +70,7 @@ def checkout(request):
                 cart.clear()
                 
                 # Redirect to order confirmation
-                return redirect('orders:confirmation', order_number=order.order_number)
+                return redirect('orders:esewa_checkout', order_number=order.order_number)
         else:
             messages.error(request, 'Please correct the errors below.')
     else:
@@ -152,7 +152,6 @@ def generate_signature(key, message):
     return signature
 
 def esewa_checkout(request, order_number):
-    """eSewa payment checkout"""
     try:
         order = Order.objects.get(order_number=order_number)
     except Order.DoesNotExist:
@@ -162,9 +161,19 @@ def esewa_checkout(request, order_number):
     secret_key = os.getenv('ESEWA_SECRET_KEY', '8gBm/:&EnhH.1/q')
     product_code = os.getenv('ESEWA_PRODUCT_CODE', 'EPAYTEST')
     
-    transaction_uuid = str(order.order_number)
+    transaction_uuid = str(order.order_number).replace('-', '')
     total_amount = str(Decimal(str(order.total)).quantize(Decimal('0.01')))
     tax_amount = "0.00"
+    
+    # 👇 ADD THESE - VERY IMPORTANT
+    print("=== ESEWA DEBUG ===")
+    print(f"order.total raw value: '{order.total}'")
+    print(f"order.total type: {type(order.total)}")
+    print(f"total_amount after formatting: '{total_amount}'")
+    print(f"transaction_uuid: '{transaction_uuid}'")
+    print(f"product_code: '{product_code}'")
+    print(f"secret_key: '{secret_key}'")
+    print("==================")
     
     data_to_sign = f"total_amount={total_amount},transaction_uuid={transaction_uuid},product_code={product_code}"
     signature = generate_signature(secret_key, data_to_sign)
