@@ -26,9 +26,7 @@
     .failure-card::before {
         content: '';
         position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
+        top: 0; left: 0; right: 0;
         height: 3px;
         background-color: #c0392b;
     }
@@ -156,23 +154,21 @@
         border: 1px solid rgba(0,0,0,0.2);
     }
 
-    .btn-ghost:hover {
-        border-color: var(--color-black);
-    }
+    .btn-ghost:hover { border-color: var(--color-black); }
 
     @keyframes scaleIn {
         from { transform: scale(0.8); opacity: 0; }
-        to { transform: scale(1); opacity: 1; }
+        to   { transform: scale(1);   opacity: 1; }
     }
 
     @keyframes fadeIn {
         from { opacity: 0; }
-        to { opacity: 1; }
+        to   { opacity: 1; }
     }
 
     @keyframes slideUp {
         from { transform: translateY(16px); opacity: 0; }
-        to { transform: translateY(0); opacity: 1; }
+        to   { transform: translateY(0);    opacity: 1; }
     }
 </style>
 {% endblock %}
@@ -185,8 +181,17 @@
             <span class="failure-icon">✕</span>
         </div>
 
-        <h1 class="failure-title">Payment Failed</h1>
-        <p class="failure-subtitle">Transaction Unsuccessful</p>
+        <!-- Title changes depending on whether user cancelled or payment failed -->
+        {% if order and order.payment_method == 'stripe' %}
+            <h1 class="failure-title">Payment Cancelled</h1>
+            <p class="failure-subtitle">Stripe Payment Not Completed</p>
+        {% elif order and order.payment_method == 'esewa' %}
+            <h1 class="failure-title">Payment Failed</h1>
+            <p class="failure-subtitle">eSewa Transaction Unsuccessful</p>
+        {% else %}
+            <h1 class="failure-title">Payment Failed</h1>
+            <p class="failure-subtitle">Transaction Unsuccessful</p>
+        {% endif %}
 
         <div class="failure-divider"></div>
 
@@ -195,20 +200,44 @@
             and you have not been charged.
         </p>
 
+        <!-- Reasons change depending on payment method -->
         <div class="failure-reasons">
             <p>This may have happened because</p>
+            {% if order and order.payment_method == 'stripe' %}
+            <ul>
+                <li>You clicked Back or closed the payment page</li>
+                <li>Your card was declined</li>
+                <li>The session expired before payment was completed</li>
+                <li>A temporary issue with Stripe</li>
+            </ul>
+            {% else %}
             <ul>
                 <li>Insufficient balance in your eSewa account</li>
                 <li>Payment was cancelled or timed out</li>
                 <li>Incorrect eSewa credentials entered</li>
                 <li>A temporary issue with the payment gateway</li>
             </ul>
+            {% endif %}
         </div>
 
         <div class="failure-actions">
+            <!-- If we know the order, offer to retry that exact order -->
+            {% if order %}
+                {% if order.payment_method == 'stripe' %}
+                <a href="{% url 'orders:stripe_checkout' order_number=order.order_number %}" class="btn-full btn-dark">
+                    Retry with Stripe
+                </a>
+                {% elif order.payment_method == 'esewa' %}
+                <a href="{% url 'orders:esewa_checkout' order_number=order.order_number %}" class="btn-full btn-dark">
+                    Retry with eSewa
+                </a>
+                {% endif %}
+            {% else %}
             <a href="{% url 'orders:checkout' %}" class="btn-full btn-dark">
                 Try Again
             </a>
+            {% endif %}
+
             <a href="{% url 'products:list' %}" class="btn-full btn-ghost">
                 Continue Shopping
             </a>

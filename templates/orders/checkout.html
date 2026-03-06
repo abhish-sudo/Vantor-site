@@ -14,6 +14,7 @@
         margin: 0 auto;
     }
 
+    /* ── Form Sections ── */
     .form-section {
         border: 1px solid rgba(0,0,0,0.12);
         padding: var(--space-lg);
@@ -39,9 +40,7 @@
         margin-bottom: 10px;
     }
 
-    .form-row-full {
-        margin-bottom: 10px;
-    }
+    .form-row-full { margin-bottom: 10px; }
 
     .form-input {
         width: 100%;
@@ -66,9 +65,7 @@
         font-size: 0.8125rem;
     }
 
-    textarea.form-input {
-        resize: none;
-    }
+    textarea.form-input { resize: none; }
 
     .errorlist {
         list-style: none;
@@ -78,13 +75,17 @@
         color: #c0392b;
     }
 
-    /* Order Summary Box */
+    /* ── Order Summary Box ── */
     .order-summary-box {
         border: 1px solid rgba(0,0,0,0.12);
-        padding: var(--space-lg);
         background-color: #fff;
         position: sticky;
         top: 20px;
+    }
+
+    .summary-header {
+        padding: var(--space-md) var(--space-lg);
+        border-bottom: 1px solid rgba(0,0,0,0.08);
     }
 
     .summary-title {
@@ -92,11 +93,11 @@
         letter-spacing: 0.25em;
         text-transform: uppercase;
         color: #222;
-        margin-bottom: var(--space-md);
-        padding-bottom: var(--space-sm);
-        border-bottom: 1px solid rgba(0,0,0,0.08);
         font-weight: 600;
+        margin: 0;
     }
+
+    .summary-body { padding: var(--space-md) var(--space-lg); }
 
     .summary-item {
         display: flex;
@@ -117,90 +118,86 @@
         margin: var(--space-sm) 0;
     }
 
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.8125rem;
+        color: #555;
+        margin-bottom: 6px;
+    }
+
+    .summary-free { color: #60bb46; font-weight: 500; }
+
     .summary-total {
         display: flex;
         justify-content: space-between;
         font-size: 1rem;
-        font-weight: 600;
-        margin-top: var(--space-sm);
-        margin-bottom: var(--space-lg);
+        font-weight: 700;
         color: #111;
+        margin-top: var(--space-sm);
+        padding-top: var(--space-sm);
+        border-top: 1px solid #eee;
     }
 
-    .summary-free {
-        font-size: 0.75rem;
-        color: #60bb46;
-        font-weight: 500;
+    /* ── Continue Button ── */
+    .summary-footer {
+        padding: var(--space-md) var(--space-lg) var(--space-lg);
+        border-top: 1px solid rgba(0,0,0,0.06);
     }
 
-    /* Payment Buttons */
-    .payment-buttons {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        margin-top: var(--space-md);
-    }
-
-    .btn-payment {
+    .btn-continue {
         width: 100%;
         display: flex;
         align-items: center;
         justify-content: center;
         gap: 8px;
-        padding: 13px;
-        font-size: 0.75rem;
-        letter-spacing: 0.15em;
-        text-transform: uppercase;
-        border: none;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        font-family: 'Inter', sans-serif;
-        font-weight: 500;
-    }
-
-    .btn-esewa {
-        background-color: #60bb46;
-        color: #fff;
-        border: 1px solid #60bb46;
-    }
-
-    .btn-esewa:hover {
-        background-color: transparent;
-        color: #60bb46;
-    }
-
-    .btn-cod {
+        padding: 14px;
         background-color: #111;
         color: #fff;
         border: 1px solid #111;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.8125rem;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
     }
 
-    .btn-cod:hover {
+    .btn-continue:hover {
         background-color: transparent;
         color: #111;
     }
 
-    .payment-divider {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        color: #ccc;
+    .btn-continue svg {
+        width: 14px;
+        height: 14px;
+        transition: transform 0.2s ease;
+    }
+
+    .btn-continue:hover svg { transform: translateX(3px); }
+
+    /* ── Next step note ── */
+    .next-step-note {
+        text-align: center;
         font-size: 0.7rem;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
+        color: #aaa;
+        letter-spacing: 0.08em;
+        margin-top: var(--space-sm);
     }
 
-    .payment-divider::before,
-    .payment-divider::after {
-        content: '';
-        flex: 1;
-        height: 1px;
-        background-color: #ddd;
+    .next-step-note svg {
+        width: 10px;
+        height: 10px;
+        margin-right: 4px;
+        vertical-align: middle;
     }
 
+    /* ── Responsive ── */
     @media (max-width: 768px) {
         .checkout-grid { grid-template-columns: 1fr; }
         .form-row { grid-template-columns: 1fr; }
+        .order-summary-box { position: static; }
     }
 </style>
 {% endblock %}
@@ -246,7 +243,6 @@
                     <!-- Delivery Address -->
                     <div class="form-section">
                         <p class="form-section-title">Delivery Address</p>
-
                         <div class="form-row-full">
                             {{ form.address_line1 }}
                             {{ form.address_line1.errors }}
@@ -281,44 +277,63 @@
 
                 </div>
 
-                <!-- RIGHT: Order Summary + Payment Buttons -->
+                <!-- RIGHT: Order Summary -->
                 <div class="order-summary-box">
-                    <p class="summary-title">Order Summary</p>
 
-                    {% for item in cart %}
-                    <div class="summary-item">
-                        <span>{{ item.product.name }} × {{ item.quantity }}</span>
-                        <span>NPR {{ item.total_price }}</span>
-                    </div>
-                    {% endfor %}
-
-                    <hr class="summary-divider">
-
-                    <div class="summary-item">
-                        <span>Subtotal</span>
-                        <span>NPR {{ cart.get_total_price }}</span>
-                    </div>
-                    <div class="summary-item">
-                        <span>Shipping</span>
-                        <span class="summary-free">Free</span>
+                    <div class="summary-header">
+                        <p class="summary-title">Order Summary</p>
                     </div>
 
-                    <hr class="summary-divider">
+                    <div class="summary-body">
+                        {% for item in cart %}
+                        <div class="summary-item">
+                            <span>{{ item.product.name }} × {{ item.quantity }}</span>
+                            <span>NPR {{ item.total_price }}</span>
+                        </div>
+                        {% endfor %}
 
-                    <div class="summary-total">
-                        <span>Total</span>
-                        <span>NPR {{ cart.get_total_price }}</span>
+                        <hr class="summary-divider">
+
+                        <div class="summary-row">
+                            <span>Subtotal</span>
+                            <span>NPR {{ cart.get_total_price }}</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Shipping</span>
+                            <span class="summary-free">Free</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Tax</span>
+                            <span>NPR 0.00</span>
+                        </div>
+
+                        <div class="summary-total">
+                            <span>Total</span>
+                            <span>NPR {{ cart.get_total_price }}</span>
+                        </div>
                     </div>
 
-                    <!-- Payment Buttons inside summary -->
-                    <div class="payment-buttons">
-                        <button type="submit" name="payment_method" value="esewa" class="btn-payment btn-esewa">
-                            ⊕ &nbsp;Pay with eSewa
+                    <div class="summary-footer">
+                        <!--
+                            Single "Continue to Payment" button.
+                            Payment method is chosen on the NEXT page (payment_selection.html).
+                            This keeps checkout clean and makes it easy to add new payment
+                            methods in the future — just add a new option in payment_selection.html.
+                        -->
+                        <button type="submit" class="btn-continue">
+                            Continue to Payment
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M5 12h14M12 5l7 7-7 7"/>
+                            </svg>
                         </button>
-                        <div class="payment-divider">or</div>
-                        <button type="submit" name="payment_method" value="cod" class="btn-payment btn-cod">
-                            ◎ &nbsp;Cash on Delivery
-                        </button>
+
+                        <p class="next-step-note">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                            </svg>
+                            Choose payment method on the next step
+                        </p>
                     </div>
 
                 </div>

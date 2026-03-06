@@ -29,8 +29,7 @@
                 <a href="{% url 'products:home' %}" class="nav-link">Home</a>
                 <a href="{% url 'products:list' %}" class="nav-link">Products</a>
                 {% if user.is_authenticated %}
-                    <a href="{% url 'orders:list' %}" class="nav-link">Orders</a>
-                    <a href="{% url 'accounts:profile' %}" class="nav-link">Profile</a>
+                    <a href="{% url 'accounts:profile' %}" class="nav-link">My Account</a>
                     <a href="{% url 'accounts:logout' %}" class="nav-link">Logout</a>
                 {% else %}
                     <a href="{% url 'accounts:login' %}" class="nav-link">Login</a>

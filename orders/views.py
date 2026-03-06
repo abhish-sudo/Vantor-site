@@ -7,6 +7,10 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db import transaction
 from django.utils import timezone
+from django.http import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.conf import settings
+from django.urls import reverse
 from cart.cart import Cart
 from .models import Order, OrderItem
 from .forms import OrderCreateForm
@@ -16,11 +20,19 @@ import base64
 import json
 from decimal import Decimal
 import os
+import stripe
+import urllib.request
+from django.core.cache import cache
 
+
+# ═════════════════════════════════════════════
+# CHECKOUT
+# ═════════════════════════════════════════════
 
 def checkout(request):
     """
-    Checkout page — handles both eSewa and Cash on Delivery
+    Renders checkout form and creates the Order in DB.
+    Cart is NOT cleared here — only cleared after payment is confirmed.
     """
     cart = Cart(request)
 
@@ -42,10 +54,10 @@ def checkout(request):
                 order.tax = Decimal('0.00')
                 order.shipping_cost = Decimal('0.00')
                 order.total = order.subtotal + order.tax + order.shipping_cost
-
-                payment_method = request.POST.get('payment_method', 'esewa')
-                order.payment_method = payment_method
                 order.status = 'pending'
+
+                # Don't set payment_method yet — user picks on next page
+                order.payment_method = ''
                 order.save()
 
                 for item in cart:
@@ -58,14 +70,17 @@ def checkout(request):
                         quantity=item['quantity']
                     )
 
-                cart.clear()
+                # Clean up old unpaid pending orders for this user (avoid clutter)
+                if request.user.is_authenticated:
+                    Order.objects.filter(
+                        user=request.user,
+                        status='pending',
+                        is_paid=False,
+                    ).exclude(order_number=order.order_number).delete()
 
-                if payment_method == 'esewa':
-                    return redirect('orders:esewa_checkout', order_number=order.order_number)
-                else:
-                    # COD — reduce stock immediately
-                    _reduce_stock(order)
-                    return redirect('orders:confirmation', order_number=order.order_number)
+                # ✅ Cart is NOT cleared here — cleared only after payment confirmed
+                # Redirect to payment selection page
+                return redirect('orders:payment_selection', order_number=order.order_number)
 
         else:
             messages.error(request, 'Please correct the errors below.')
@@ -80,18 +95,80 @@ def checkout(request):
             }
         form = OrderCreateForm(initial=initial_data)
 
-    return render(request, 'orders/checkout.html', {
-        'form': form,
-        'cart': cart
-    })
+    return render(request, 'orders/checkout.html', {'form': form, 'cart': cart})
 
 
-def order_confirmation(request, order_number):
+# ═════════════════════════════════════════════
+# PAYMENT SELECTION
+# ═════════════════════════════════════════════
+
+@login_required
+def payment_selection(request, order_number):
     """
-    Order confirmation page — shown after both eSewa and COD orders
+    Shows all available payment methods.
+    Handles COD directly. Stripe and eSewa redirect to their own views.
+    Add new payment methods here in the future.
     """
     order = get_object_or_404(Order, order_number=order_number)
-    return render(request, 'orders/confirmation.html', {'order': order})
+
+    # Already paid — go to success
+    if order.is_paid:
+        return redirect('orders:success_page', order_number=order.order_number)
+
+    if request.method == 'POST':
+        selected = request.POST.get('payment_method')
+
+        if selected == 'cod':
+            with transaction.atomic():
+                order.payment_method = 'cod'
+                order.status = 'processing'  # ✅ confirmed but not yet paid
+                order.is_paid = False         # ✅ not paid until delivery
+                # Don't set paid_at — they haven't paid yet
+                order.save()
+                _reduce_stock(order)
+
+            cart = Cart(request)
+            cart.clear()
+
+            return redirect('orders:success_page', order_number=order.order_number)
+
+    return render(request, 'orders/payment_selection.html', {'order': order})
+
+
+# ═════════════════════════════════════════════
+# UNIVERSAL SUCCESS & FAILURE PAGES
+# ═════════════════════════════════════════════
+
+def success_page(request, order_number):
+    """
+    Universal success page for ALL payment methods (eSewa, Stripe, COD).
+    Template reads order.payment_method to show the right message.
+    """
+    order = get_object_or_404(Order, order_number=order_number)
+    return render(request, 'orders/success.html', {'order': order})
+
+
+def failure_page(request, order_number=None):
+    """
+    Universal failure/cancel page for ALL payment methods.
+    order_number is optional — when present, user can retry payment.
+    """
+    order = None
+    if order_number:
+        try:
+            order = Order.objects.get(order_number=order_number)
+        except Order.DoesNotExist:
+            pass
+    return render(request, 'orders/failure.html', {'order': order})
+
+
+# ═════════════════════════════════════════════
+# ORDER MANAGEMENT
+# ═════════════════════════════════════════════
+
+def order_confirmation(request, order_number):
+    """Backwards compatibility — redirects to success page."""
+    return redirect('orders:success_page', order_number=order_number)
 
 
 @login_required
@@ -104,17 +181,41 @@ def order_list(request):
 
 @login_required
 def order_detail(request, order_number):
-    order = get_object_or_404(
-        Order,
-        order_number=order_number,
-        user=request.user
-    )
+    order = get_object_or_404(Order, order_number=order_number, user=request.user)
     return render(request, 'orders/order_detail.html', {'order': order})
 
 
-# ─────────────────────────────────────────────
-# Helpers
-# ─────────────────────────────────────────────
+@login_required
+def cancel_order(request, order_number):
+    order = get_object_or_404(Order, order_number=order_number, user=request.user)
+
+    if order.status not in ['pending', 'paid', 'processing']:
+        messages.error(request, 'This order cannot be cancelled.')
+        return redirect('orders:list')
+
+    if request.method == 'POST':
+        with transaction.atomic():
+            # Restore stock only if order was paid
+            if order.is_paid:
+                from products.models import Product
+                for item in order.items.all():
+                    try:
+                        product = Product.objects.get(id=item.product_id)
+                        product.stock_quantity += item.quantity
+                        product.save()
+                    except Product.DoesNotExist:
+                        pass
+
+            order.status = 'cancelled'
+            order.save()
+            messages.success(request, f'Order {order.order_number} has been cancelled.')
+
+    return redirect('orders:list')
+
+
+# ═════════════════════════════════════════════
+# HELPERS
+# ═════════════════════════════════════════════
 
 def _reduce_stock(order):
     """Reduce product stock for all items in an order."""
@@ -129,16 +230,13 @@ def _reduce_stock(order):
 
 
 def _generate_esewa_signature(key, message):
-    """Generate HMAC-SHA256 signature for eSewa"""
+    """Generate HMAC-SHA256 signature for eSewa."""
     h = hmac.new(key.encode('utf-8'), message.encode('utf-8'), hashlib.sha256)
     return base64.b64encode(h.digest()).decode('utf-8')
 
 
 def _verify_esewa_signature(payment_data, secret_key):
-    """
-    Verify the signature eSewa sends back.
-    Returns True if valid, False if tampered or invalid.
-    """
+    """Verify eSewa's response signature. Returns True if valid."""
     signed_field_names = payment_data.get('signed_field_names', '')
     received_signature = payment_data.get('signature', '')
 
@@ -151,12 +249,38 @@ def _verify_esewa_signature(payment_data, secret_key):
     return hmac.compare_digest(expected_signature, received_signature)
 
 
-# ─────────────────────────────────────────────
-# eSewa Views
-# ─────────────────────────────────────────────
+def get_npr_to_usd_rate():
+    """
+    Fetches real-time NPR → USD exchange rate.
+    - Free API, no key needed
+    - Cached for 1 hour to avoid hitting API on every checkout
+    - Falls back to safe hardcoded rate if API is down
+    """
+    CACHE_KEY = 'npr_usd_rate'
+    FALLBACK_RATE = Decimal('0.0075')  # ~133 NPR per 1 USD
+    CACHE_TIMEOUT = 60 * 60  # 1 hour
+
+    cached = cache.get(CACHE_KEY)
+    if cached:
+        return Decimal(str(cached))
+
+    try:
+        url = 'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/npr.json'
+        with urllib.request.urlopen(url, timeout=5) as response:
+            data = json.loads(response.read().decode())
+            rate = Decimal(str(data['npr']['usd']))
+            cache.set(CACHE_KEY, str(rate), CACHE_TIMEOUT)
+            return rate
+    except Exception:
+        return FALLBACK_RATE
+
+
+# ═════════════════════════════════════════════
+# ESEWA
+# ═════════════════════════════════════════════
 
 def esewa_checkout(request, order_number):
-    """eSewa payment page"""
+    """Renders eSewa payment page with signed form data."""
     try:
         order = Order.objects.get(order_number=order_number)
     except Order.DoesNotExist:
@@ -164,7 +288,7 @@ def esewa_checkout(request, order_number):
         return redirect('products:home')
 
     if order.is_paid:
-        return redirect('orders:confirmation', order_number=order.order_number)
+        return redirect('orders:success_page', order_number=order.order_number)
 
     secret_key = os.getenv('ESEWA_SECRET_KEY', '8gBm/:&EnhH.1/q')
     product_code = os.getenv('ESEWA_PRODUCT_CODE', 'EPAYTEST')
@@ -173,6 +297,11 @@ def esewa_checkout(request, order_number):
 
     data_to_sign = f"total_amount={total_amount},transaction_uuid={transaction_uuid},product_code={product_code}"
     signature = _generate_esewa_signature(secret_key, data_to_sign)
+
+    # Set payment method when user is sent to eSewa
+    if order.payment_method != 'esewa':
+        order.payment_method = 'esewa'
+        order.save(update_fields=['payment_method'])
 
     return render(request, 'orders/esewa_payment.html', {
         'order': order,
@@ -184,36 +313,32 @@ def esewa_checkout(request, order_number):
     })
 
 
-def success(request):
+def esewa_success(request):
     """
-    eSewa success callback — verifies payment then redirects to confirmation.
-    eSewa sends: ?data=<base64 encoded JSON>
+    eSewa success callback.
+    Verifies signature → marks order paid → clears cart → success page.
     """
     data_param = request.GET.get('data')
 
     if not data_param:
         messages.error(request, 'No payment data received.')
-        return redirect('products:home')
+        return redirect('orders:failure_page_no_order')
 
-    # Decode base64 JSON
     try:
         payment_data = json.loads(base64.b64decode(data_param).decode('utf-8'))
     except Exception:
         messages.error(request, 'Invalid payment response.')
-        return redirect('products:home')
+        return redirect('orders:failure_page_no_order')
 
-    # Verify eSewa's signature
     secret_key = os.getenv('ESEWA_SECRET_KEY', '8gBm/:&EnhH.1/q')
     if not _verify_esewa_signature(payment_data, secret_key):
         messages.error(request, 'Payment verification failed. Please contact support.')
-        return redirect('products:home')
+        return redirect('orders:failure_page_no_order')
 
-    # Check status is COMPLETE
     if payment_data.get('status') != 'COMPLETE':
         messages.error(request, 'Payment was not completed.')
-        return redirect('products:home')
+        return redirect('orders:failure_page_no_order')
 
-    # Find the order
     transaction_uuid = payment_data.get('transaction_uuid', '')
     try:
         uid = transaction_uuid
@@ -221,13 +346,12 @@ def success(request):
         order = Order.objects.get(order_number=formatted_uuid)
     except Order.DoesNotExist:
         messages.error(request, 'Order not found.')
-        return redirect('products:home')
+        return redirect('orders:failure_page_no_order')
 
     # Prevent double processing
     if order.is_paid:
-        return redirect('orders:confirmation', order_number=order.order_number)
+        return redirect('orders:success_page', order_number=order.order_number)
 
-    # Mark paid + reduce stock atomically
     with transaction.atomic():
         order.is_paid = True
         order.status = 'paid'
@@ -237,37 +361,182 @@ def success(request):
         order.save()
         _reduce_stock(order)
 
-    return redirect('orders:confirmation', order_number=order.order_number)
+    # ✅ Clear cart after eSewa payment confirmed
+    cart = Cart(request)
+    cart.clear()
+
+    return redirect('orders:success_page', order_number=order.order_number)
 
 
-def failure(request):
-    """eSewa payment failure callback"""
-    return render(request, 'orders/failure.html')
+def esewa_failure(request):
+    """eSewa failure/cancel callback."""
+    return redirect('orders:failure_page_no_order')
+
+
+# ═════════════════════════════════════════════
+# STRIPE
+# ═════════════════════════════════════════════
+
+@login_required
+def stripe_payment_page(request, order_number):
+    """
+    Renders stripe_payment.html — the order summary page
+    shown before the user is redirected to Stripe.
+    """
+    order = get_object_or_404(Order, order_number=order_number)
+
+    if order.is_paid:
+        return redirect('orders:success_page', order_number=order.order_number)
+
+    # Set payment method when user lands on stripe page
+    if order.payment_method != 'stripe':
+        order.payment_method = 'stripe'
+        order.save(update_fields=['payment_method'])
+
+    return render(request, 'orders/stripe_payment.html', {'order': order})
 
 
 @login_required
-def cancel_order(request, order_number):
-    order = get_object_or_404(Order, order_number=order_number, user=request.user)
+def stripe_checkout(request, order_number):
+    """
+    Creates a Stripe Checkout Session and redirects user to Stripe's hosted page.
+    Uses real-time NPR → USD conversion.
+    """
+    stripe.api_key = settings.STRIPE_SECRET_KEY
+    order = get_object_or_404(Order, order_number=order_number)
 
-    # Only allow cancelling pending or cod orders
-    if order.status not in ['pending', 'paid']:
-        messages.error(request, 'This order cannot be cancelled.')
-        return redirect('orders:list')
+    if order.is_paid:
+        return redirect('orders:success_page', order_number=order.order_number)
 
-    if request.method == 'POST':
-        with transaction.atomic():
-            # Restore stock
-            from products.models import Product
-            for item in order.items.all():
-                try:
-                    product = Product.objects.get(id=item.product_id)
-                    product.stock_quantity += item.quantity
-                    product.save()
-                except Product.DoesNotExist:
-                    pass
+    npr_to_usd = get_npr_to_usd_rate()
 
-            order.status = 'cancelled'
-            order.save()
-            messages.success(request, f'Order {order.order_number} has been cancelled.')
+    line_items = []
+    for item in order.items.all():
+        price_usd = item.price * npr_to_usd
+        unit_amount = max(int(price_usd * 100), 50)  # Stripe minimum is 50 cents
+        line_items.append({
+            'price_data': {
+                'currency': 'usd',
+                'unit_amount': unit_amount,
+                'product_data': {
+                    'name': item.product_name,
+                    'description': f'NPR {item.price} (1 NPR = ${npr_to_usd:.6f} USD)',
+                },
+            },
+            'quantity': item.quantity,
+        })
 
-    return redirect('orders:list')
+    success_url = (
+        request.build_absolute_uri(reverse('orders:stripe_success'))
+        + '?session_id={CHECKOUT_SESSION_ID}'
+    )
+    cancel_url = request.build_absolute_uri(
+        reverse('orders:stripe_cancel', kwargs={'order_number': order.order_number})
+    )
+
+    session = stripe.checkout.Session.create(
+        payment_method_types=['card'],
+        line_items=line_items,
+        mode='payment',
+        success_url=success_url,
+        cancel_url=cancel_url,
+        customer_email=order.email,
+        metadata={
+            'order_number': str(order.order_number),
+            'order_id': order.id,
+            'npr_to_usd_rate': str(npr_to_usd),
+        }
+    )
+
+    return redirect(session.url, code=303)
+
+
+def stripe_success(request):
+    """
+    Stripe redirects user here after payment.
+    We just retrieve the order and go to success page.
+    Actual order marking is done in the webhook (more reliable).
+    """
+    session_id = request.GET.get('session_id')
+
+    if not session_id:
+        return redirect('orders:failure_page_no_order')
+
+    stripe.api_key = settings.STRIPE_SECRET_KEY
+
+    try:
+        session = stripe.checkout.Session.retrieve(session_id)
+        order_number = session.metadata.get('order_number')
+        order = get_object_or_404(Order, order_number=order_number)
+        return redirect('orders:success_page', order_number=order.order_number)
+    except Exception:
+        return redirect('orders:failure_page_no_order')
+
+
+def stripe_cancel(request, order_number):
+    """
+    User cancelled/went back on Stripe's page.
+    Order stays in DB as pending — user can retry or choose different payment.
+    Cart is also still intact so user can go back and add more items.
+    """
+    return redirect('orders:failure_page_with_order', order_number=order_number)
+
+
+@csrf_exempt
+def stripe_webhook(request):
+    """
+    Stripe calls this endpoint after a successful payment.
+    This is the ONLY place we mark the order as paid for Stripe.
+    Signature is verified to prevent fake requests.
+    """
+    payload = request.body
+    sig_header = request.META.get('HTTP_STRIPE_SIGNATURE')
+    webhook_secret = settings.STRIPE_WEBHOOK_SECRET
+
+    try:
+        event = stripe.Webhook.construct_event(payload, sig_header, webhook_secret)
+    except ValueError:
+        return HttpResponse(status=400)
+    except stripe.error.SignatureVerificationError:
+        return HttpResponse(status=400)
+
+    if event['type'] == 'checkout.session.completed':
+        session = event['data']['object']
+
+        if session.get('payment_status') == 'paid':
+            order_number = session['metadata'].get('order_number')
+
+            try:
+                order = Order.objects.get(order_number=order_number)
+            except Order.DoesNotExist:
+                return HttpResponse(status=404)
+
+            # Prevent double processing
+            if not order.is_paid:
+                with transaction.atomic():
+                    order.is_paid = True
+                    order.status = 'paid'
+                    order.payment_method = 'stripe'
+                    order.payment_id = session.get('payment_intent', '')
+                    order.paid_at = timezone.now()
+                    order.save()
+                    _reduce_stock(order)
+
+                # Clear cart from user's active session after Stripe payment
+                if order.user:
+                    try:
+                        from django.contrib.sessions.models import Session
+                        from django.utils import timezone as tz
+                        for sess in Session.objects.filter(expire_date__gte=tz.now()):
+                            data = sess.get_decoded()
+                            if data.get('_auth_user_id') == str(order.user.id):
+                                if 'cart' in data:
+                                    from django.contrib.sessions.backends.db import SessionStore
+                                    store = SessionStore(session_key=sess.session_key)
+                                    del store['cart']
+                                    store.save()
+                                    break
+                    except Exception:
+                        pass  # Cart clear is best-effort in webhook context
+
+    return HttpResponse(status=200)

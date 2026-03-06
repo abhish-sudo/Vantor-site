@@ -6,7 +6,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from .forms import UserRegistrationForm, UserLoginForm
+from .forms import UserRegistrationForm, UserLoginForm, UserUpdateForm, ProfileUpdateForm
 
 
 def register(request):
@@ -64,10 +64,21 @@ def user_logout(request):
 
 @login_required
 def profile(request):
-    """User profile page"""
-    # Get user's recent orders
-    recent_orders = request.user.orders.all()[:5]
-    
-    return render(request, 'accounts/profile.html', {
-        'recent_orders': recent_orders
-    })
+    from .models import UserProfile
+    from orders.models import Order
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+
+    if request.method == 'POST':
+        user = request.user
+        user.first_name = request.POST.get('first_name', user.first_name)
+        user.last_name  = request.POST.get('last_name', user.last_name)
+        user.email      = request.POST.get('email', user.email)
+        user.save()
+        if request.FILES.get('avatar'):
+            profile.avatar = request.FILES['avatar']
+            profile.save()
+        messages.success(request, 'Profile updated successfully.')
+        return redirect('accounts:profile')
+
+    orders = request.user.orders.prefetch_related('items').order_by('-created_at')
+    return render(request, 'orders/order_list.html', {'orders': orders})

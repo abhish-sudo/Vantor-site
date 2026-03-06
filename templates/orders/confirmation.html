@@ -1,15 +1,15 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Order Confirmed - Vantor{% endblock %}
+{% block title %}
+    {% if order.is_paid %}Order Confirmed{% else %}Order Placed{% endif %} - Vantor
+{% endblock %}
 
 {% block extra_css %}
 <style>
-    .confirmation-wrapper {
-        padding: var(--space-xl) 0;
-    }
+    .confirmation-wrapper { padding: var(--space-xl) 0; }
 
-    /* Top success banner */
+    /* ── Top Banner ── */
     .confirmation-banner {
         text-align: center;
         padding: var(--space-xl) var(--space-md);
@@ -28,15 +28,9 @@
         font-size: 2rem;
     }
 
-    .icon-paid {
-        border: 2px solid #60bb46;
-        color: #60bb46;
-    }
-
-    .icon-cod {
-        border: 2px solid var(--color-black);
-        color: var(--color-black);
-    }
+    .icon-paid   { border: 2px solid #60bb46; color: #60bb46; }
+    .icon-stripe { border: 2px solid #635bff; color: #635bff; }
+    .icon-cod    { border: 2px solid #111;    color: #111;    }
 
     .confirmation-title {
         font-family: 'Cormorant Garamond', serif;
@@ -55,7 +49,7 @@
         animation: slideUp 0.5s ease 0.3s both;
     }
 
-    /* Main content card */
+    /* ── Main Card ── */
     .confirmation-card {
         max-width: 760px;
         margin: 0 auto;
@@ -70,6 +64,7 @@
         align-items: flex-start;
         padding: var(--space-lg);
         border-bottom: 1px solid rgba(0,0,0,0.08);
+        gap: var(--space-md);
     }
 
     .meta-label {
@@ -84,9 +79,10 @@
         font-size: 0.9375rem;
         font-family: 'Cormorant Garamond', serif;
         color: #111;
+        word-break: break-all;
     }
 
-    /* Payment status badge */
+    /* ── Payment Badge ── */
     .payment-badge {
         display: inline-flex;
         align-items: center;
@@ -96,19 +92,13 @@
         letter-spacing: 0.15em;
         text-transform: uppercase;
         font-weight: 600;
+        white-space: nowrap;
     }
 
-    .badge-paid {
-        background-color: #f0faf0;
-        color: #2e7d32;
-        border: 1px solid #c8e6c9;
-    }
-
-    .badge-pending {
-        background-color: #fffbf0;
-        color: #e65100;
-        border: 1px solid #ffe0b2;
-    }
+    .badge-esewa   { background-color: #f0faf0; color: #2e7d32;  border: 1px solid #c8e6c9; }
+    .badge-stripe  { background-color: #f0f0ff; color: #3730a3;  border: 1px solid #c7d2fe; }
+    .badge-cod     { background-color: #fff8e1; color: #e65100;  border: 1px solid #ffe082; }
+    .badge-pending { background-color: #fffbf0; color: #e65100;  border: 1px solid #ffe0b2; }
 
     .badge-dot {
         width: 6px;
@@ -117,15 +107,13 @@
         background-color: currentColor;
     }
 
-    /* Sections inside card */
+    /* ── Card Sections ── */
     .card-section {
         padding: var(--space-lg);
         border-bottom: 1px solid rgba(0,0,0,0.06);
     }
 
-    .card-section:last-child {
-        border-bottom: none;
-    }
+    .card-section:last-child { border-bottom: none; }
 
     .card-section-title {
         font-size: 0.7rem;
@@ -136,7 +124,7 @@
         margin-bottom: var(--space-md);
     }
 
-    /* Order items */
+    /* ── Order Items ── */
     .order-item-row {
         display: flex;
         justify-content: space-between;
@@ -146,27 +134,13 @@
         font-size: 0.9rem;
     }
 
-    .order-item-row:last-child {
-        border-bottom: none;
-    }
+    .order-item-row:last-child { border-bottom: none; }
 
-    .order-item-name {
-        font-weight: 500;
-        color: #111;
-    }
+    .order-item-name  { font-weight: 500; color: #111; }
+    .order-item-qty   { font-size: 0.8rem; color: #999; margin-top: 2px; }
+    .order-item-price { font-weight: 500; color: #111; }
 
-    .order-item-qty {
-        font-size: 0.8rem;
-        color: #999;
-        margin-top: 2px;
-    }
-
-    .order-item-price {
-        font-weight: 500;
-        color: #111;
-    }
-
-    /* Totals */
+    /* ── Totals ── */
     .totals-row {
         display: flex;
         justify-content: space-between;
@@ -184,7 +158,7 @@
         margin-top: var(--space-sm);
     }
 
-    /* Shipping info */
+    /* ── Shipping Info ── */
     .shipping-info p {
         font-size: 0.875rem;
         color: #555;
@@ -192,28 +166,40 @@
         margin: 0;
     }
 
-    /* COD notice */
-    .cod-notice {
+    /* ── Notice Boxes ── */
+    .notice-box {
+        margin: 0 var(--space-lg) var(--space-lg);
+        padding: var(--space-md);
+        font-size: 0.875rem;
+        line-height: 1.7;
+        color: #555;
+    }
+
+    .notice-cod {
         background-color: #fffbf0;
         border: 1px solid #ffe0b2;
         border-left: 3px solid #e65100;
-        padding: var(--space-md);
-        margin: 0 var(--space-lg) var(--space-lg);
-        font-size: 0.875rem;
-        color: #555;
-        line-height: 1.7;
     }
 
-    .cod-notice strong {
-        color: #e65100;
+    .notice-stripe {
+        background-color: #f0f0ff;
+        border: 1px solid #c7d2fe;
+        border-left: 3px solid #635bff;
+    }
+
+    .notice-label {
         display: block;
-        font-size: 0.75rem;
+        font-size: 0.7rem;
         letter-spacing: 0.1em;
         text-transform: uppercase;
+        font-weight: 700;
         margin-bottom: 4px;
     }
 
-    /* Action buttons */
+    .notice-cod    .notice-label { color: #e65100; }
+    .notice-stripe .notice-label { color: #3730a3; }
+
+    /* ── Action Buttons ── */
     .confirmation-actions {
         display: flex;
         flex-direction: column;
@@ -254,18 +240,33 @@
         border: 1px solid rgba(0,0,0,0.2);
     }
 
-    .btn-ghost:hover {
-        border-color: #111;
+    .btn-ghost:hover { border-color: #111; }
+
+    .btn-retry {
+        background-color: #3730a3;
+        color: #fff;
+        border: 1px solid #3730a3;
     }
 
+    .btn-retry:hover {
+        background-color: transparent;
+        color: #3730a3;
+    }
+
+    /* ── Animations ── */
     @keyframes scaleIn {
         from { transform: scale(0.8); opacity: 0; }
-        to { transform: scale(1); opacity: 1; }
+        to   { transform: scale(1);   opacity: 1; }
     }
 
     @keyframes slideUp {
         from { transform: translateY(16px); opacity: 0; }
-        to { transform: translateY(0); opacity: 1; }
+        to   { transform: translateY(0);    opacity: 1; }
+    }
+
+    @media (max-width: 600px) {
+        .confirmation-card-header { flex-direction: column; gap: var(--space-sm); }
+        .confirmation-title { font-size: 1.8rem; }
     }
 </style>
 {% endblock %}
@@ -274,51 +275,85 @@
 <section class="confirmation-wrapper">
     <div class="container">
 
-        <!-- Top Banner -->
+        <!-- ── Top Banner ── -->
         <div class="confirmation-banner">
-            <div class="confirmation-icon-wrapper {% if order.is_paid %}icon-paid{% else %}icon-cod{% endif %}">
-                {% if order.is_paid %}✓{% else %}◎{% endif %}
-            </div>
 
+            {# Determine icon and colour based on payment method and paid status #}
             {% if order.is_paid %}
-                <h1 class="confirmation-title">Payment Successful</h1>
-                <p class="confirmation-subtitle">Your order has been confirmed and is being processed</p>
+                {% if order.payment_method == 'stripe' %}
+                    <div class="confirmation-icon-wrapper icon-stripe">✓</div>
+                    <h1 class="confirmation-title">Payment Successful</h1>
+                    <p class="confirmation-subtitle">Paid securely via Stripe</p>
+                {% elif order.payment_method == 'esewa' %}
+                    <div class="confirmation-icon-wrapper icon-paid">✓</div>
+                    <h1 class="confirmation-title">Payment Successful</h1>
+                    <p class="confirmation-subtitle">Paid via eSewa</p>
+                {% else %}
+                    <div class="confirmation-icon-wrapper icon-paid">✓</div>
+                    <h1 class="confirmation-title">Order Confirmed</h1>
+                    <p class="confirmation-subtitle">Your order is confirmed and being processed</p>
+                {% endif %}
             {% else %}
-                <h1 class="confirmation-title">Order Placed</h1>
-                <p class="confirmation-subtitle">Your order is confirmed — pay on delivery</p>
+                {% if order.payment_method == 'cod' %}
+                    <div class="confirmation-icon-wrapper icon-cod">◎</div>
+                    <h1 class="confirmation-title">Order Placed</h1>
+                    <p class="confirmation-subtitle">Your order is confirmed — pay on delivery</p>
+                {% else %}
+                    <div class="confirmation-icon-wrapper icon-cod">⚠</div>
+                    <h1 class="confirmation-title">Payment Pending</h1>
+                    <p class="confirmation-subtitle">Your order is saved but payment is incomplete</p>
+                {% endif %}
             {% endif %}
+
         </div>
 
-        <!-- Main Card -->
+        <!-- ── Main Card ── -->
         <div class="confirmation-card">
 
-            <!-- Header: Order number + date + payment badge -->
+            <!-- Header: order number + date + payment badge -->
             <div class="confirmation-card-header">
                 <div>
                     <p class="meta-label">Order Number</p>
                     <p class="meta-value">{{ order.order_number }}</p>
                 </div>
-                <div style="text-align: center;">
+                <div>
                     <p class="meta-label">Date</p>
                     <p class="meta-value">{{ order.created_at|date:"M d, Y" }}</p>
+                    <p style="font-size:0.75rem; color:#aaa; margin-top:2px;">
+                        {{ order.created_at|time:"h:i A" }}
+                    </p>
                 </div>
-                <div style="text-align: right;">
-                    <p class="meta-label">Payment</p>
+                <div style="text-align:right;">
+                    <p class="meta-label">Payment Status</p>
                     {% if order.is_paid %}
-                        <span class="payment-badge badge-paid">
-                            <span class="badge-dot"></span>
-                            Paid via eSewa
-                        </span>
+                        {% if order.payment_method == 'stripe' %}
+                            <span class="payment-badge badge-stripe">
+                                <span class="badge-dot"></span> Paid via Stripe
+                            </span>
+                        {% elif order.payment_method == 'esewa' %}
+                            <span class="payment-badge badge-esewa">
+                                <span class="badge-dot"></span> Paid via eSewa
+                            </span>
+                        {% else %}
+                            <span class="payment-badge badge-esewa">
+                                <span class="badge-dot"></span> Paid
+                            </span>
+                        {% endif %}
                     {% else %}
-                        <span class="payment-badge badge-pending">
-                            <span class="badge-dot"></span>
-                            Pending — Cash on Delivery
-                        </span>
+                        {% if order.payment_method == 'cod' %}
+                            <span class="payment-badge badge-cod">
+                                <span class="badge-dot"></span> Cash on Delivery
+                            </span>
+                        {% else %}
+                            <span class="payment-badge badge-pending">
+                                <span class="badge-dot"></span> Payment Incomplete
+                            </span>
+                        {% endif %}
                     {% endif %}
                 </div>
             </div>
 
-            <!-- Order Items -->
+            <!-- Items Ordered -->
             <div class="card-section">
                 <p class="card-section-title">Items Ordered</p>
                 {% for item in order.items.all %}
@@ -332,7 +367,7 @@
                 {% endfor %}
             </div>
 
-            <!-- Totals -->
+            <!-- Order Totals -->
             <div class="card-section">
                 <p class="card-section-title">Order Total</p>
                 <div class="totals-row">
@@ -341,7 +376,7 @@
                 </div>
                 <div class="totals-row">
                     <span>Shipping</span>
-                    <span style="color: #60bb46;">Free</span>
+                    <span style="color:#60bb46;">Free</span>
                 </div>
                 <div class="totals-row">
                     <span>Tax</span>
@@ -353,7 +388,7 @@
                 </div>
             </div>
 
-            <!-- Shipping Address -->
+            <!-- Delivery Address -->
             <div class="card-section">
                 <p class="card-section-title">Delivery Address</p>
                 <div class="shipping-info">
@@ -361,23 +396,49 @@
                     <p>{{ order.address_line1 }}{% if order.address_line2 %}, {{ order.address_line2 }}{% endif %}</p>
                     <p>{{ order.city }}, {{ order.state_province }} {{ order.postal_code }}</p>
                     <p>{{ order.country }}</p>
-                    <p style="margin-top: 8px;">{{ order.email }} &nbsp;·&nbsp; {{ order.phone }}</p>
+                    <p style="margin-top:8px;">{{ order.email }} &nbsp;·&nbsp; {{ order.phone }}</p>
                 </div>
             </div>
 
-            <!-- COD notice — only shown for cash on delivery -->
-            {% if not order.is_paid %}
-            </div>
-            <div class="cod-notice">
-                <strong>⚠ Cash on Delivery</strong>
-                Please have NPR {{ order.total }} ready when your order arrives.
+        </div>
+
+        <!-- ── Notice boxes (outside card, full width up to card max-width) ── -->
+        <div style="max-width:760px; margin: 0 auto;">
+
+            {% if not order.is_paid and order.payment_method == 'cod' %}
+            <div class="notice-box notice-cod">
+                <span class="notice-label">⚠ Cash on Delivery</span>
+                Please have <strong>NPR {{ order.total }}</strong> ready when your order arrives.
                 Our delivery team will collect payment at your doorstep.
             </div>
-            <div class="confirmation-card">
             {% endif %}
 
-            <!-- Action Buttons -->
-            <div class="confirmation-actions">
+            {% if not order.is_paid and order.payment_method == 'stripe' %}
+            <div class="notice-box notice-stripe">
+                <span class="notice-label">⏳ Payment Incomplete</span>
+                Your order is saved but payment was not completed. You can retry below
+                or choose a different payment method.
+            </div>
+            {% endif %}
+
+        </div>
+
+        <!-- ── Action Buttons ── -->
+        <div style="max-width:760px; margin: 0 auto;">
+            <div class="confirmation-card confirmation-actions">
+
+                {% if not order.is_paid and order.payment_method == 'stripe' %}
+                {# Unpaid Stripe order — let user retry or change payment method #}
+                <a href="{% url 'orders:stripe_checkout' order_number=order.order_number %}"
+                   class="btn-full btn-retry">
+                    Retry Stripe Payment
+                </a>
+                <a href="{% url 'orders:payment_selection' order_number=order.order_number %}"
+                   class="btn-full btn-ghost">
+                    Choose Different Payment Method
+                </a>
+                {% endif %}
+
                 <a href="{% url 'products:home' %}" class="btn-full btn-dark">
                     Continue Shopping
                 </a>
@@ -386,8 +447,8 @@
                     View All Orders
                 </a>
                 {% endif %}
-            </div>
 
+            </div>
         </div>
 
     </div>

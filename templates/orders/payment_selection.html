@@ -1,0 +1,362 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Choose Payment — Vantor{% endblock %}
+
+{% block extra_css %}
+<style>
+    .payment-wrapper {
+        min-height: 70vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: var(--space-xl) var(--space-md);
+    }
+
+    .payment-card {
+        max-width: 580px;
+        width: 100%;
+        background-color: var(--color-white);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .payment-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 3px;
+        background-color: var(--color-black);
+    }
+
+    .payment-header {
+        padding: var(--space-xl) var(--space-xl) var(--space-lg);
+        text-align: center;
+        border-bottom: 1px solid rgba(0,0,0,0.06);
+    }
+
+    .payment-eyebrow {
+        font-size: 0.75rem;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        opacity: 0.4;
+        margin-bottom: var(--space-sm);
+    }
+
+    .payment-title {
+        font-family: 'Cormorant Garamond', serif;
+        font-size: 2rem;
+        font-weight: 300;
+        letter-spacing: 0.05em;
+        margin-bottom: 0;
+    }
+
+    /* ── Order Mini Summary ── */
+    .order-mini-summary {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: var(--space-md) var(--space-xl);
+        border-bottom: 1px solid rgba(0,0,0,0.06);
+        background-color: rgba(0,0,0,0.015);
+    }
+
+    .order-mini-left { font-size: 0.8125rem; color: #555; }
+
+    .mini-label {
+        display: block;
+        font-size: 0.65rem;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        opacity: 0.5;
+        margin-bottom: 3px;
+    }
+
+    .order-mini-right { text-align: right; }
+
+    .order-mini-total {
+        font-family: 'Cormorant Garamond', serif;
+        font-size: 1.5rem;
+        font-weight: 400;
+        color: #111;
+    }
+
+    /* ── Items Preview ── */
+    .order-items-preview {
+        padding: var(--space-md) var(--space-xl);
+        border-bottom: 1px solid rgba(0,0,0,0.06);
+    }
+
+    .items-label {
+        font-size: 0.65rem;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        opacity: 0.35;
+        margin-bottom: var(--space-sm);
+    }
+
+    .item-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.8125rem;
+        color: #555;
+        padding: 4px 0;
+    }
+
+    .item-row-qty   { font-size: 0.75rem; opacity: 0.45; margin-left: 4px; }
+    .item-row-price { font-weight: 500; color: #111; }
+
+    /* ── Payment Methods ── */
+    .payment-methods {
+        padding: var(--space-lg) var(--space-xl);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .methods-label {
+        font-size: 0.65rem;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        opacity: 0.35;
+        margin-bottom: var(--space-sm);
+    }
+
+    .payment-option {
+        display: flex;
+        align-items: center;
+        gap: var(--space-md);
+        padding: var(--space-md) var(--space-lg);
+        border: 1px solid rgba(0,0,0,0.12);
+        background-color: #fff;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-family: 'Inter', sans-serif;
+        width: 100%;
+        text-align: left;
+    }
+
+    .payment-option:hover {
+        border-color: var(--color-black);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        transform: translateY(-1px);
+    }
+
+    .payment-option-icon {
+        width: 42px;
+        height: 42px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        flex-shrink: 0;
+        font-size: 1.1rem;
+    }
+
+    .icon-stripe { background-color: #ede9fe; }
+    .icon-esewa  { background-color: #e8f5e9; }
+    .icon-cod    { background-color: #f5f5f5; }
+
+    .payment-option-text { flex: 1; }
+
+    .payment-option-name {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #111;
+        margin-bottom: 2px;
+    }
+
+    .payment-option-desc { font-size: 0.75rem; color: #888; }
+
+    .payment-option-arrow {
+        font-size: 1rem;
+        opacity: 0.25;
+        transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    .payment-option:hover .payment-option-arrow {
+        opacity: 1;
+        transform: translateX(4px);
+    }
+
+    .method-divider {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: #ccc;
+        font-size: 0.65rem;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+    }
+
+    .method-divider::before,
+    .method-divider::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background-color: #eee;
+    }
+
+    /* ── Back to Cart ── */
+    .back-to-cart {
+        padding: var(--space-md) var(--space-xl);
+        border-top: 1px solid rgba(0,0,0,0.06);
+        text-align: center;
+    }
+
+    .back-link {
+        font-size: 0.75rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #888;
+        text-decoration: none;
+        transition: color 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .back-link:hover { color: #111; }
+
+    /* ── Security Note ── */
+    .payment-footer-note {
+        padding: var(--space-sm) var(--space-xl) var(--space-lg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        font-size: 0.65rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        opacity: 0.25;
+    }
+
+    .payment-footer-note svg { width: 11px; height: 11px; }
+
+    @media (max-width: 600px) {
+        .payment-header,
+        .order-mini-summary,
+        .order-items-preview,
+        .payment-methods,
+        .back-to-cart { padding-left: var(--space-md); padding-right: var(--space-md); }
+        .payment-option { padding: var(--space-sm) var(--space-md); }
+        .payment-title { font-size: 1.6rem; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="payment-wrapper">
+    <div class="payment-card">
+
+        <!-- Header -->
+        <div class="payment-header">
+            <p class="payment-eyebrow">Step 2 of 2</p>
+            <h1 class="payment-title">Choose Payment Method</h1>
+        </div>
+
+        <!-- Order mini summary -->
+        <div class="order-mini-summary">
+            <div class="order-mini-left">
+                <span class="mini-label">Order for</span>
+                {{ order.full_name }}
+            </div>
+            <div class="order-mini-right">
+                <span class="mini-label">Total</span>
+                <span class="order-mini-total">NPR {{ order.total }}</span>
+            </div>
+        </div>
+
+        <!-- Items preview -->
+        <div class="order-items-preview">
+            <p class="items-label">{{ order.items.count }} item{{ order.items.count|pluralize }}</p>
+            {% for item in order.items.all %}
+            <div class="item-row">
+                <span>
+                    {{ item.product_name }}
+                    <span class="item-row-qty">× {{ item.quantity }}</span>
+                </span>
+                <span class="item-row-price">NPR {{ item.total_price }}</span>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Payment Methods -->
+        <div class="payment-methods">
+            <p class="methods-label">Select a payment method</p>
+
+            <!-- ① Stripe -->
+            <a href="{% url 'orders:stripe_checkout' order_number=order.order_number %}"
+               class="payment-option">
+                <div class="payment-option-icon icon-stripe">💳</div>
+                <div class="payment-option-text">
+                    <p class="payment-option-name">Pay with Stripe</p>
+                    <p class="payment-option-desc">Credit / Debit card — Visa, Mastercard, Amex</p>
+                </div>
+                <span class="payment-option-arrow">→</span>
+            </a>
+
+            <div class="method-divider">or</div>
+
+            <!-- ② eSewa -->
+            <a href="{% url 'orders:esewa_checkout' order_number=order.order_number %}"
+               class="payment-option">
+                <div class="payment-option-icon icon-esewa">⊕</div>
+                <div class="payment-option-text">
+                    <p class="payment-option-name">Pay with eSewa</p>
+                    <p class="payment-option-desc">Nepal's most popular digital wallet</p>
+                </div>
+                <span class="payment-option-arrow">→</span>
+            </a>
+
+            <div class="method-divider">or</div>
+
+            <!-- ③ Cash on Delivery -->
+            <form method="POST">
+                {% csrf_token %}
+                <button type="submit" name="payment_method" value="cod"
+                        class="payment-option">
+                    <div class="payment-option-icon icon-cod">◎</div>
+                    <div class="payment-option-text">
+                        <p class="payment-option-name">Cash on Delivery</p>
+                        <p class="payment-option-desc">Pay NPR {{ order.total }} when your order arrives</p>
+                    </div>
+                    <span class="payment-option-arrow">→</span>
+                </button>
+            </form>
+
+            {# ── Add future payment methods below this line ──────────────────── #}
+            {% comment %} {#
+            <div class="method-divider">or</div>
+            <a href="{% url 'orders:khalti_checkout' order_number=order.order_number %}"
+               class="payment-option">
+                <div class="payment-option-icon" style="background:#f3e8ff;">🟣</div>
+                <div class="payment-option-text">
+                    <p class="payment-option-name">Pay with Khalti</p>
+                    <p class="payment-option-desc">Khalti digital wallet</p>
+                </div>
+                <span class="payment-option-arrow">→</span>
+            </a>
+            #} {% endcomment %}
+
+        </div>
+
+        <!-- Back to cart — cart is still intact so user can add more items -->
+        <div class="back-to-cart">
+            <a href="{% url 'cart:detail' %}" class="back-link">
+                ← Back to cart &amp; add more items
+            </a>
+        </div>
+
+        <!-- Security note -->
+        <div class="payment-footer-note">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+            All payments are secure and encrypted
+        </div>
+
+    </div>
+</section>
+{% endblock %}

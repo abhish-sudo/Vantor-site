@@ -1,26 +1,31 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}My Orders - Vantor{% endblock %}
+{% block title %}My Account - Vantor{% endblock %}
 
 {% block extra_css %}
 <style>
-    .orders-wrapper {
+
+    /* ═══════════════════════════════════════
+       PAGE LAYOUT
+    ═══════════════════════════════════════ */
+
+    .account-page {
         padding: var(--space-xl) 0;
-        max-width: 900px;
+        max-width: 1200px;
         margin: 0 auto;
     }
 
-    .orders-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: baseline;
+    .account-page-header {
         margin-bottom: var(--space-xl);
         padding-bottom: var(--space-md);
         border-bottom: 2px solid #111;
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
     }
 
-    .orders-title {
+    .account-page-title {
         font-family: 'Cormorant Garamond', serif;
         font-size: 2.5rem;
         font-weight: 300;
@@ -28,16 +33,328 @@
         color: #111;
     }
 
-    .orders-count {
-        font-size: 0.75rem;
+    .account-page-subtitle {
+        font-size: 0.7rem;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: #888;
+    }
+
+    .account-grid {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        gap: var(--space-xl);
+        align-items: start;
+    }
+
+    /* ═══════════════════════════════════════
+       LEFT — PROFILE SIDEBAR
+    ═══════════════════════════════════════ */
+
+    .profile-sidebar {
+        position: sticky;
+        top: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-md);
+    }
+
+    .profile-avatar-card {
+        background-color: #fff;
+        border: 1px solid #e8e8e8;
+        padding: var(--space-lg);
+        text-align: center;
+        position: relative;
+    }
+
+    .profile-avatar-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 3px;
+        background-color: #111;
+    }
+
+    /* Avatar with click-to-upload overlay */
+    .avatar-upload-wrapper {
+        position: relative;
+        width: 88px;
+        height: 88px;
+        border-radius: 50%;
+        margin: 0 auto var(--space-md);
+        cursor: pointer;
+    }
+
+    .avatar-circle {
+        width: 88px;
+        height: 88px;
+        border-radius: 50%;
+        overflow: hidden;
+        border: 2px solid #eee;
+        background-color: #f5f5f5;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .avatar-circle img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .avatar-placeholder {
+        font-family: 'Cormorant Garamond', serif;
+        font-size: 2rem;
+        font-weight: 400;
+        color: #bbb;
+        line-height: 1;
+    }
+
+    /* Hover overlay on avatar */
+    .avatar-upload-overlay {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        background-color: rgba(0,0,0,0.45);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+        pointer-events: none;
+    }
+
+    .avatar-upload-wrapper:hover .avatar-upload-overlay {
+        opacity: 1;
+    }
+
+    .avatar-overlay-icon {
+        font-size: 1.1rem;
+        color: #fff;
+        margin-bottom: 3px;
+    }
+
+    .avatar-overlay-text {
+        font-size: 0.55rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #fff;
+        font-family: 'Inter', sans-serif;
+        font-weight: 600;
+    }
+
+    /* Hidden file input */
+    #avatarInput { display: none; }
+
+    /* Photo upload mini form */
+    .avatar-upload-form {
+        display: none;
+        margin-top: var(--space-sm);
+        padding-top: var(--space-sm);
+        border-top: 1px solid #f0f0f0;
+    }
+
+    .avatar-upload-form.active { display: block; }
+
+    .avatar-filename {
+        font-size: 0.65rem;
+        color: #888;
+        margin-bottom: 8px;
+        font-style: italic;
+        word-break: break-all;
+    }
+
+    .btn-upload-photo {
+        width: 100%;
+        padding: 8px;
+        background-color: #111;
+        color: #fff;
+        border: 1px solid #111;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.62rem;
         letter-spacing: 0.15em;
         text-transform: uppercase;
-        color: #444;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .btn-upload-photo:hover { background-color: transparent; color: #111; }
+
+    .profile-name {
+        font-family: 'Cormorant Garamond', serif;
+        font-size: 1.35rem;
+        font-weight: 400;
+        color: #111;
+        margin-bottom: 4px;
+    }
+
+    .profile-username {
+        font-size: 0.68rem;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: #aaa;
+        margin-bottom: var(--space-md);
+    }
+
+    .profile-member-since {
+        font-size: 0.75rem;
+        color: #aaa;
+        padding-top: var(--space-sm);
+        border-top: 1px solid #f0f0f0;
+    }
+
+    .profile-member-since span {
+        display: block;
+        font-size: 0.58rem;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        margin-bottom: 3px;
+        color: #ccc;
+    }
+
+    /* Info card */
+    .profile-info-card {
+        background-color: #fff;
+        border: 1px solid #e8e8e8;
+    }
+
+    .profile-info-header {
+        padding: var(--space-sm) var(--space-md);
+        border-bottom: 1px solid #f0f0f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .profile-info-label {
+        font-size: 0.62rem;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: #555;
+        font-weight: 600;
+    }
+
+    .btn-edit-toggle {
+        font-size: 0.62rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #111;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-family: 'Inter', sans-serif;
         font-weight: 500;
+        padding: 0;
+        text-decoration: underline;
+        text-underline-offset: 3px;
+        transition: opacity 0.2s;
+    }
+
+    .btn-edit-toggle:hover { opacity: 0.5; }
+
+    .profile-info-body { padding: var(--space-md); }
+
+    .info-row {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: var(--space-sm);
+        padding-bottom: var(--space-sm);
+        border-bottom: 1px solid #f8f8f8;
+    }
+
+    .info-row:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+
+    .info-row-label {
+        font-size: 0.58rem;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: #ccc;
+        margin-bottom: 3px;
+    }
+
+    .info-row-value { font-size: 0.8125rem; color: #222; font-weight: 500; }
+    .info-row-value.empty { color: #ccc; font-style: italic; font-weight: 400; }
+
+    /* Edit form */
+    .profile-edit-form { display: none; padding: var(--space-md); }
+    .profile-edit-form.active { display: block; }
+
+    .edit-field { margin-bottom: 10px; }
+
+    .edit-label {
+        display: block;
+        font-size: 0.58rem;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: #aaa;
+        margin-bottom: 5px;
+        font-weight: 600;
+    }
+
+    .edit-input {
+        width: 100%;
+        padding: 9px 11px;
+        border: 1px solid #ddd;
+        background-color: #fafafa;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.8rem;
+        color: #111;
+        outline: none;
+        transition: border-color 0.2s ease;
+        box-sizing: border-box;
+    }
+
+    .edit-input:focus { border-color: #111; background-color: #fff; }
+
+    .btn-save {
+        width: 100%;
+        padding: 10px;
+        background-color: #111;
+        color: #fff;
+        border: 1px solid #111;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.68rem;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        margin-top: var(--space-sm);
+    }
+
+    .btn-save:hover { background-color: transparent; color: #111; }
+
+    /* ═══════════════════════════════════════
+       RIGHT — ORDER HISTORY
+    ═══════════════════════════════════════ */
+
+    .orders-section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: var(--space-lg);
+    }
+
+    .orders-section-title {
+        font-family: 'Cormorant Garamond', serif;
+        font-size: 1.5rem;
+        font-weight: 300;
+        letter-spacing: 0.05em;
+        color: #111;
+    }
+
+    .orders-count {
+        font-size: 0.68rem;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: #aaa;
     }
 
     .order-card {
-        border: 1px solid #ddd;
+        border: 1px solid #e8e8e8;
         background-color: #fff;
         margin-bottom: var(--space-md);
         transition: border-color 0.2s ease, box-shadow 0.2s ease;
@@ -45,7 +362,7 @@
 
     .order-card:hover {
         border-color: #111;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        box-shadow: 0 2px 12px rgba(0,0,0,0.05);
     }
 
     .order-card-header {
@@ -54,28 +371,24 @@
         gap: var(--space-md);
         align-items: center;
         padding: var(--space-md) var(--space-lg);
-        border-bottom: 1px solid #eee;
+        border-bottom: 1px solid #f0f0f0;
         background-color: #fafafa;
     }
 
     .order-meta-label {
-        font-size: 0.65rem;
+        font-size: 0.58rem;
         letter-spacing: 0.2em;
         text-transform: uppercase;
-        color: #666;
+        color: #bbb;
         margin-bottom: 5px;
         font-weight: 600;
     }
 
-    .order-meta-value {
-        font-size: 0.9rem;
-        color: #111;
-        font-weight: 600;
-    }
+    .order-meta-value { font-size: 0.875rem; color: #111; font-weight: 600; }
 
     .order-meta-value.order-number {
         font-family: 'Cormorant Garamond', serif;
-        font-size: 1rem;
+        font-size: 0.875rem;
         font-weight: 500;
         word-break: break-all;
     }
@@ -83,9 +396,9 @@
     .status-badge {
         display: inline-flex;
         align-items: center;
-        gap: 5px;
-        padding: 5px 10px;
-        font-size: 0.65rem;
+        gap: 4px;
+        padding: 4px 8px;
+        font-size: 0.58rem;
         letter-spacing: 0.12em;
         text-transform: uppercase;
         font-weight: 700;
@@ -93,8 +406,7 @@
     }
 
     .badge-dot {
-        width: 5px;
-        height: 5px;
+        width: 4px; height: 4px;
         border-radius: 50%;
         background-color: currentColor;
         flex-shrink: 0;
@@ -107,23 +419,20 @@
     .status-delivered  { background: #e8f5e9; color: #1b5e20; border: 1px solid #66bb6a; }
     .status-cancelled  { background: #ffebee; color: #b71c1c; border: 1px solid #ef9a9a; }
 
-    .order-card-items {
-        padding: var(--space-md) var(--space-lg);
-    }
+    .order-card-items { padding: var(--space-sm) var(--space-lg); }
 
     .order-item-preview {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 10px 0;
-        border-bottom: 1px solid #f0f0f0;
-        font-size: 0.9rem;
+        padding: 8px 0;
+        border-bottom: 1px solid #f5f5f5;
+        font-size: 0.875rem;
     }
 
     .order-item-preview:last-child { border-bottom: none; }
-
     .order-item-name  { color: #222; font-weight: 500; }
-    .order-item-qty   { font-size: 0.8rem; color: #666; margin-left: 6px; font-weight: 400; }
+    .order-item-qty   { font-size: 0.75rem; color: #bbb; margin-left: 4px; }
     .order-item-price { color: #111; font-weight: 600; }
 
     .order-card-footer {
@@ -131,54 +440,40 @@
         justify-content: space-between;
         align-items: center;
         padding: var(--space-sm) var(--space-lg);
-        background-color: #f5f5f5;
-        border-top: 1px solid #eee;
+        background-color: #fafafa;
+        border-top: 1px solid #f0f0f0;
     }
 
-    .order-footer-left {
-        display: flex;
-        align-items: center;
-        gap: var(--space-md);
-    }
+    .order-footer-left  { display: flex; align-items: center; gap: var(--space-md); }
+    .order-footer-right { display: flex; align-items: center; gap: 8px; }
 
-    .order-total-wrap {
-        display: flex;
-        flex-direction: column;
-    }
-
-    .order-total-label {
-        font-size: 0.65rem;
-        letter-spacing: 0.15em;
-        text-transform: uppercase;
-        color: #555;
-        font-weight: 600;
-        margin-bottom: 2px;
-    }
-
-    .order-total-value { font-size: 1.1rem; font-weight: 700; color: #111; }
+    .order-total-wrap  { display: flex; flex-direction: column; }
+    .order-total-label { font-size: 0.58rem; letter-spacing: 0.15em; text-transform: uppercase; color: #bbb; font-weight: 600; margin-bottom: 2px; }
+    .order-total-value { font-size: 1rem; font-weight: 700; color: #111; }
 
     .order-payment-chip {
         display: inline-flex;
         align-items: center;
-        gap: 5px;
-        padding: 4px 10px;
-        font-size: 0.65rem;
+        gap: 4px;
+        padding: 3px 8px;
+        font-size: 0.58rem;
         letter-spacing: 0.1em;
         text-transform: uppercase;
         font-weight: 600;
         border-radius: 2px;
     }
 
-    .chip-esewa { background-color: #e8f5e9; color: #1b5e20; border: 1px solid #81c784; }
-    .chip-cod   { background-color: #fff3e0; color: #bf360c; border: 1px solid #ffb74d; }
+    .chip-esewa   { background-color: #e8f5e9; color: #1b5e20; border: 1px solid #81c784; }
+    .chip-cod     { background-color: #fff3e0; color: #bf360c; border: 1px solid #ffb74d; }
+    .chip-stripe  { background-color: #f0f0ff; color: #3730a3; border: 1px solid #c7d2fe; }
+    .chip-pending { background-color: #fff8e1; color: #f57f17; border: 1px solid #ffe082; }
 
-    /* Cancel button */
     .btn-cancel {
         background: transparent;
         color: #c0392b;
         border: 1px solid #c0392b;
-        padding: 7px 16px;
-        font-size: 0.65rem;
+        padding: 6px 13px;
+        font-size: 0.6rem;
         letter-spacing: 0.15em;
         text-transform: uppercase;
         font-weight: 600;
@@ -187,30 +482,73 @@
         transition: all 0.2s ease;
     }
 
-    .btn-cancel:hover {
-        background-color: #c0392b;
+    .btn-cancel:hover { background-color: #c0392b; color: #fff; }
+
+    .btn-complete-payment {
+        display: inline-block;
+        padding: 6px 12px;
+        font-size: 0.6rem;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        font-weight: 600;
+        font-family: 'Inter', sans-serif;
+        background-color: #3730a3;
         color: #fff;
+        border: 1px solid #3730a3;
+        text-decoration: none;
+        transition: all 0.2s ease;
     }
 
-    /* Cancel confirmation modal */
+    .btn-complete-payment:hover { background-color: transparent; color: #3730a3; }
+
+    .empty-orders {
+        text-align: center;
+        padding: var(--space-xl) var(--space-md);
+        border: 1px dashed #ddd;
+        background-color: #fff;
+    }
+
+    .empty-orders-icon  { font-size: 2rem; margin-bottom: var(--space-md); opacity: 0.2; }
+    .empty-orders-title { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; font-weight: 300; margin-bottom: var(--space-sm); color: #333; }
+    .empty-orders-text  { font-size: 0.8rem; color: #aaa; margin-bottom: var(--space-lg); }
+
+    .btn-action {
+        display: inline-block;
+        padding: 11px 24px;
+        font-size: 0.7rem;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        font-family: 'Inter', sans-serif;
+        font-weight: 500;
+    }
+
+    .btn-dark { background-color: #111; color: #fff; border: 1px solid #111; }
+    .btn-dark:hover { background-color: transparent; color: #111; }
+
+    .orders-actions { margin-top: var(--space-lg); }
+
+    /* ═══════════════════════════════════════
+       CANCEL MODAL
+    ═══════════════════════════════════════ */
+
     .modal-overlay {
         display: none;
         position: fixed;
         inset: 0;
-        background-color: rgba(0,0,0,0.5);
+        background-color: rgba(0,0,0,0.45);
         z-index: 1000;
         align-items: center;
         justify-content: center;
     }
 
-    .modal-overlay.active {
-        display: flex;
-    }
+    .modal-overlay.active { display: flex; }
 
     .modal-box {
         background: #fff;
         padding: var(--space-xl);
-        max-width: 420px;
+        max-width: 400px;
         width: 90%;
         text-align: center;
         position: relative;
@@ -224,36 +562,15 @@
         background-color: #c0392b;
     }
 
-    .modal-icon {
-        font-size: 2rem;
-        margin-bottom: var(--space-md);
-        color: #c0392b;
-    }
-
-    .modal-title {
-        font-family: 'Cormorant Garamond', serif;
-        font-size: 1.75rem;
-        font-weight: 300;
-        color: #111;
-        margin-bottom: var(--space-sm);
-    }
-
-    .modal-text {
-        font-size: 0.875rem;
-        color: #555;
-        line-height: 1.7;
-        margin-bottom: var(--space-lg);
-    }
-
-    .modal-actions {
-        display: flex;
-        gap: var(--space-sm);
-    }
+    .modal-icon  { font-size: 1.75rem; margin-bottom: var(--space-md); color: #c0392b; }
+    .modal-title { font-family: 'Cormorant Garamond', serif; font-size: 1.6rem; font-weight: 300; color: #111; margin-bottom: var(--space-sm); }
+    .modal-text  { font-size: 0.875rem; color: #666; line-height: 1.7; margin-bottom: var(--space-lg); }
+    .modal-actions { display: flex; gap: var(--space-sm); }
 
     .modal-btn {
         flex: 1;
-        padding: 12px;
-        font-size: 0.75rem;
+        padding: 11px;
+        font-size: 0.7rem;
         letter-spacing: 0.15em;
         text-transform: uppercase;
         font-family: 'Inter', sans-serif;
@@ -263,73 +580,25 @@
         border: none;
     }
 
-    .modal-btn-confirm {
-        background-color: #c0392b;
-        color: #fff;
-        border: 1px solid #c0392b;
+    .modal-btn-confirm { background-color: #c0392b; color: #fff; border: 1px solid #c0392b; }
+    .modal-btn-confirm:hover { background-color: transparent; color: #c0392b; }
+    .modal-btn-dismiss { background-color: transparent; color: #111; border: 1px solid #ddd; }
+    .modal-btn-dismiss:hover { border-color: #111; }
+
+    /* ═══════════════════════════════════════
+       RESPONSIVE
+    ═══════════════════════════════════════ */
+
+    @media (max-width: 960px) {
+        .account-grid        { grid-template-columns: 1fr; }
+        .profile-sidebar     { position: static; }
+        .account-page-header { flex-direction: column; gap: 4px; }
     }
 
-    .modal-btn-confirm:hover {
-        background-color: transparent;
-        color: #c0392b;
-    }
-
-    .modal-btn-dismiss {
-        background-color: transparent;
-        color: #111;
-        border: 1px solid #ddd;
-    }
-
-    .modal-btn-dismiss:hover {
-        border-color: #111;
-    }
-
-    /* Bottom actions */
-    .orders-actions {
-        display: flex;
-        gap: var(--space-sm);
-        margin-top: var(--space-lg);
-    }
-
-    .btn-action {
-        display: inline-block;
-        padding: 12px 28px;
-        font-size: 0.75rem;
-        letter-spacing: 0.15em;
-        text-transform: uppercase;
-        text-decoration: none;
-        transition: all 0.2s ease;
-        font-family: 'Inter', sans-serif;
-        font-weight: 500;
-    }
-
-    .btn-dark {
-        background-color: #111;
-        color: #fff;
-        border: 1px solid #111;
-    }
-
-    .btn-dark:hover {
-        background-color: transparent;
-        color: #111;
-    }
-
-    /* Empty state */
-    .empty-orders {
-        text-align: center;
-        padding: var(--space-xl) var(--space-md);
-        border: 1px dashed #ccc;
-        background-color: #fff;
-    }
-
-    .empty-orders-icon  { font-size: 2.5rem; margin-bottom: var(--space-md); opacity: 0.25; }
-    .empty-orders-title { font-family: 'Cormorant Garamond', serif; font-size: 1.75rem; font-weight: 300; margin-bottom: var(--space-sm); color: #333; }
-    .empty-orders-text  { font-size: 0.875rem; color: #666; margin-bottom: var(--space-lg); }
-
-    @media (max-width: 768px) {
+    @media (max-width: 640px) {
         .order-card-header  { grid-template-columns: 1fr 1fr; gap: var(--space-sm); }
-        .orders-actions     { flex-direction: column; }
         .order-card-footer  { flex-direction: column; align-items: flex-start; gap: var(--space-sm); }
+        .order-footer-right { width: 100%; justify-content: flex-end; }
     }
 </style>
 {% endblock %}
@@ -337,116 +606,263 @@
 {% block content %}
 <section class="cart-container">
     <div class="container">
-        <div class="orders-wrapper">
+        <div class="account-page">
 
-            <div class="orders-header">
-                <h1 class="orders-title">My Orders</h1>
-                <span class="orders-count">{{ orders.count }} order{{ orders.count|pluralize }}</span>
+            <div class="account-page-header">
+                <h1 class="account-page-title">My Account</h1>
+                <span class="account-page-subtitle">{{ user.username }}</span>
             </div>
 
-            {% if orders %}
-                {% for order in orders %}
-                <div class="order-card">
+            <div class="account-grid">
 
-                    <div class="order-card-header">
-                        <div>
-                            <p class="order-meta-label">Order Number</p>
-                            <p class="order-meta-value order-number">{{ order.order_number }}</p>
-                        </div>
-                        <div>
-                            <p class="order-meta-label">Date</p>
-                            <p class="order-meta-value">{{ order.created_at|date:"M d, Y" }}</p>
-                            <p style="font-size: 0.65rem; color: #888; margin-top: 2px;">
-                                {{ order.created_at|time:"h:i A" }}
-                            </p>
-                        </div>
-                        <div>
-                            <p class="order-meta-label">Status</p>
-                            <span class="status-badge status-{{ order.status }}">
-                                <span class="badge-dot"></span>
-                                {{ order.get_status_display }}
-                            </span>
-                        </div>
-                        <div style="text-align: right;">
-                            <p class="order-meta-label">Amount</p>
-                            <p class="order-meta-value">NPR {{ order.total }}</p>
-                        </div>
+                <!-- ════════════════════════
+                     LEFT — PROFILE SIDEBAR
+                ════════════════════════ -->
+                <aside class="profile-sidebar">
+
+                    <!-- Avatar + Name -->
+                    <div class="profile-avatar-card">
+
+                        <!-- Photo upload form — posts to accounts:profile -->
+                        <form method="POST" enctype="multipart/form-data"
+                              action="{% url 'accounts:profile' %}"
+                              id="avatarForm">
+                            {% csrf_token %}
+
+                            <!-- Clickable avatar with hover overlay -->
+                            <div class="avatar-upload-wrapper"
+                                 onclick="document.getElementById('avatarInput').click()"
+                                 title="Click to change photo">
+                                <div class="avatar-circle">
+                                    {% if user.profile.avatar %}
+                                        <img src="{{ user.profile.avatar.url }}"
+                                             alt="{{ user.get_full_name }}"
+                                             id="avatarPreview">
+                                    {% else %}
+                                        <span class="avatar-placeholder" id="avatarInitials">
+                                            {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+                                        </span>
+                                    {% endif %}
+                                </div>
+                                <div class="avatar-upload-overlay">
+                                    <span class="avatar-overlay-icon">📷</span>
+                                    <span class="avatar-overlay-text">Change</span>
+                                </div>
+                            </div>
+
+                            <!-- Hidden file input -->
+                            <input type="file" name="avatar" id="avatarInput"
+                                   accept="image/*">
+
+                            <!-- Shows filename + save button after file chosen -->
+                            <div class="avatar-upload-form" id="avatarUploadForm">
+                                <p class="avatar-filename" id="avatarFilename"></p>
+                                <button type="submit" class="btn-upload-photo">
+                                    Save Photo
+                                </button>
+                            </div>
+
+                        </form>
+
+                        <p class="profile-name">
+                            {{ user.get_full_name|default:user.username }}
+                        </p>
+                        <p class="profile-username">@{{ user.username }}</p>
+                        <p class="profile-member-since">
+                            <span>Member since</span>
+                            {{ user.date_joined|date:"F Y" }}
+                        </p>
                     </div>
 
-                    <div class="order-card-items">
-                        {% for item in order.items.all %}
-                        <div class="order-item-preview">
-                            <span class="order-item-name">
-                                {{ item.product_name }}
-                                <span class="order-item-qty">× {{ item.quantity }}</span>
-                            </span>
-                            <span class="order-item-price">NPR {{ item.total_price }}</span>
+                    <!-- Contact Info -->
+                    <div class="profile-info-card">
+                        <div class="profile-info-header">
+                            <span class="profile-info-label">Contact Info</span>
+                            <button class="btn-edit-toggle" onclick="toggleEdit()">Edit</button>
+                        </div>
+
+                        <!-- Static view -->
+                        <div class="profile-info-body" id="profileStaticView">
+                            <div class="info-row">
+                                <span class="info-row-label">Full Name</span>
+                                <span class="info-row-value {% if not user.get_full_name %}empty{% endif %}">
+                                    {{ user.get_full_name|default:"Not set" }}
+                                </span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-row-label">Email</span>
+                                <span class="info-row-value">
+                                    {{ user.email|default:"Not set" }}
+                                </span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-row-label">Username</span>
+                                <span class="info-row-value">{{ user.username }}</span>
+                            </div>
+                        </div>
+
+                        <!-- Edit form — also posts to accounts:profile -->
+                        <form class="profile-edit-form" id="profileEditForm"
+                              method="POST" enctype="multipart/form-data"
+                              action="{% url 'accounts:profile' %}">
+                            {% csrf_token %}
+                            <div class="edit-field">
+                                <label class="edit-label">First Name</label>
+                                <input type="text" name="first_name" class="edit-input"
+                                       value="{{ user.first_name }}" placeholder="First Name">
+                            </div>
+                            <div class="edit-field">
+                                <label class="edit-label">Last Name</label>
+                                <input type="text" name="last_name" class="edit-input"
+                                       value="{{ user.last_name }}" placeholder="Last Name">
+                            </div>
+                            <div class="edit-field">
+                                <label class="edit-label">Email</label>
+                                <input type="email" name="email" class="edit-input"
+                                       value="{{ user.email }}" placeholder="your@email.com">
+                            </div>
+                            <button type="submit" class="btn-save">Save Changes</button>
+                        </form>
+                    </div>
+
+                </aside>
+
+                <!-- ════════════════════════
+                     RIGHT — ORDER HISTORY
+                ════════════════════════ -->
+                <div class="orders-column">
+
+                    <div class="orders-section-header">
+                        <h2 class="orders-section-title">Order History</h2>
+                        <span class="orders-count">
+                            {{ orders.count }} order{{ orders.count|pluralize }}
+                        </span>
+                    </div>
+
+                    {% if orders %}
+                        {% for order in orders %}
+                        <div class="order-card">
+
+                            <div class="order-card-header">
+                                <div>
+                                    <p class="order-meta-label">Order Number</p>
+                                    <p class="order-meta-value order-number">{{ order.order_number }}</p>
+                                </div>
+                                <div>
+                                    <p class="order-meta-label">Date</p>
+                                    <p class="order-meta-value">{{ order.created_at|date:"M d, Y" }}</p>
+                                    <p style="font-size:0.6rem; color:#ccc; margin-top:2px;">
+                                        {{ order.created_at|time:"h:i A" }}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p class="order-meta-label">Status</p>
+                                    <span class="status-badge status-{{ order.status }}">
+                                        <span class="badge-dot"></span>
+                                        {{ order.get_status_display }}
+                                    </span>
+                                </div>
+                                <div style="text-align:right;">
+                                    <p class="order-meta-label">Amount</p>
+                                    <p class="order-meta-value">NPR {{ order.total }}</p>
+                                </div>
+                            </div>
+
+                            <div class="order-card-items">
+                                {% for item in order.items.all %}
+                                <div class="order-item-preview">
+                                    <span class="order-item-name">
+                                        {{ item.product_name }}
+                                        <span class="order-item-qty">× {{ item.quantity }}</span>
+                                    </span>
+                                    <span class="order-item-price">NPR {{ item.total_price }}</span>
+                                </div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="order-card-footer">
+                                <div class="order-footer-left">
+                                    <div class="order-total-wrap">
+                                        <span class="order-total-label">Total</span>
+                                        <span class="order-total-value">NPR {{ order.total }}</span>
+                                    </div>
+
+                                    {% if order.is_paid %}
+                                        {% if order.payment_method == 'stripe' %}
+                                            <span class="order-payment-chip chip-stripe">✓ Stripe</span>
+                                        {% elif order.payment_method == 'esewa' %}
+                                            <span class="order-payment-chip chip-esewa">✓ eSewa</span>
+                                        {% else %}
+                                            <span class="order-payment-chip chip-esewa">✓ Paid</span>
+                                        {% endif %}
+                                    {% elif order.payment_method == 'cod' and order.status == 'processing' %}
+                                        <span class="order-payment-chip chip-cod">◎ Cash on Delivery</span>
+                                    {% elif not order.is_paid and order.payment_method != 'cod' and order.payment_method != '' %}
+                                        <span class="order-payment-chip chip-pending">⏳ Awaiting Payment</span>
+                                    {% else %}
+                                        <span class="order-payment-chip chip-cod">◎ Pending</span>
+                                    {% endif %}
+                                </div>
+
+                                <div class="order-footer-right">
+                                    {% if order.payment_method == 'stripe' and not order.is_paid and order.status == 'pending' %}
+                                    <a href="{% url 'orders:payment_selection' order_number=order.order_number %}"
+                                       class="btn-complete-payment">
+                                        Complete Payment →
+                                    </a>
+                                    {% endif %}
+
+                                    {% if order.status == 'pending' or order.status == 'processing' and not order.is_paid %}
+                                    <button class="btn-cancel"
+                                            onclick="openCancelModal('{{ order.order_number }}')">
+                                        Cancel
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+
                         </div>
                         {% endfor %}
-                    </div>
 
-                    <div class="order-card-footer">
-                        <div class="order-footer-left">
-                            <div class="order-total-wrap">
-                                <span class="order-total-label">Total</span>
-                                <span class="order-total-value">NPR {{ order.total }}</span>
-                            </div>
-                            {% if order.is_paid %}
-                                <span class="order-payment-chip chip-esewa">✓ Paid via eSewa</span>
-                            {% else %}
-                                <span class="order-payment-chip chip-cod">◎ Cash on Delivery</span>
-                            {% endif %}
+                        <div class="orders-actions">
+                            <a href="{% url 'products:list' %}" class="btn-action btn-dark">
+                                Continue Shopping
+                            </a>
                         </div>
 
-                        <!-- Cancel button — only for pending or cod orders -->
-                        {% if order.status == 'pending' %}
-                        <button
-                            class="btn-cancel"
-                            onclick="openCancelModal('{{ order.order_number }}')"
-                        >
-                            Cancel Order
-                        </button>
-                        {% endif %}
-                    </div>
+                    {% else %}
+                        <div class="empty-orders">
+                            <div class="empty-orders-icon">◎</div>
+                            <h3 class="empty-orders-title">No orders yet</h3>
+                            <p class="empty-orders-text">You haven't placed any orders yet.</p>
+                            <a href="{% url 'products:list' %}" class="btn-action btn-dark">
+                                Browse Products
+                            </a>
+                        </div>
+                    {% endif %}
 
                 </div>
-                {% endfor %}
 
-                <div class="orders-actions">
-                    <a href="{% url 'products:list' %}" class="btn-action btn-dark">
-                        Continue Shopping
-                    </a>
-                </div>
-
-            {% else %}
-                <div class="empty-orders">
-                    <div class="empty-orders-icon">◎</div>
-                    <h2 class="empty-orders-title">No orders yet</h2>
-                    <p class="empty-orders-text">You haven't placed any orders yet. Start shopping!</p>
-                    <a href="{% url 'products:list' %}" class="btn-action btn-dark">Browse Products</a>
-                </div>
-            {% endif %}
-
+            </div>
         </div>
     </div>
 </section>
 
-<!-- Cancel Confirmation Modal -->
+<!-- Cancel Modal -->
 <div class="modal-overlay" id="cancelModal">
     <div class="modal-box">
         <div class="modal-icon">✕</div>
         <h2 class="modal-title">Cancel Order?</h2>
         <p class="modal-text">
-            Are you sure you want to cancel this order?
-            This action cannot be undone.
+            Are you sure you want to cancel this order? This action cannot be undone.
         </p>
         <div class="modal-actions">
             <button class="modal-btn modal-btn-dismiss" onclick="closeCancelModal()">
                 Keep Order
             </button>
-            <form id="cancelForm" method="POST" action="" style="flex: 1;">
+            <form id="cancelForm" method="POST" action="" style="flex:1;">
                 {% csrf_token %}
-                <button type="submit" class="modal-btn modal-btn-confirm" style="width: 100%;">
+                <button type="submit" class="modal-btn modal-btn-confirm" style="width:100%;">
                     Yes, Cancel
                 </button>
             </form>
@@ -455,6 +871,43 @@
 </div>
 
 <script>
+    // ── Avatar upload ──
+    document.getElementById('avatarInput').addEventListener('change', function() {
+        if (this.files && this.files[0]) {
+            const file = this.files[0];
+
+            // Show filename and save button
+            document.getElementById('avatarFilename').textContent = file.name;
+            document.getElementById('avatarUploadForm').classList.add('active');
+
+            // Show image preview immediately
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const circle = document.querySelector('.avatar-circle');
+                circle.innerHTML = '<img src="' + e.target.result + '" id="avatarPreview" style="width:100%;height:100%;object-fit:cover;">';
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // ── Info edit toggle ──
+    function toggleEdit() {
+        const staticView = document.getElementById('profileStaticView');
+        const editForm   = document.getElementById('profileEditForm');
+        const btn        = document.querySelector('.btn-edit-toggle');
+        const isEditing  = editForm.classList.contains('active');
+        if (isEditing) {
+            editForm.classList.remove('active');
+            staticView.style.display = 'block';
+            btn.textContent = 'Edit';
+        } else {
+            editForm.classList.add('active');
+            staticView.style.display = 'none';
+            btn.textContent = 'Cancel';
+        }
+    }
+
+    // ── Cancel modal ──
     function openCancelModal(orderNumber) {
         document.getElementById('cancelForm').action = '/orders/cancel/' + orderNumber + '/';
         document.getElementById('cancelModal').classList.add('active');
@@ -464,7 +917,6 @@
         document.getElementById('cancelModal').classList.remove('active');
     }
 
-    // Close modal if clicking outside
     document.getElementById('cancelModal').addEventListener('click', function(e) {
         if (e.target === this) closeCancelModal();
     });
