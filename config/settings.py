@@ -24,7 +24,11 @@ SECRET_KEY = env('SECRET_KEY', default='django-insecure-dev-key-change-this-in-p
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env('DEBUG')
 
-ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['localhost', '127.0.0.1'])
+ALLOWED_HOSTS = [
+    'vantor-site-3.onrender.com',
+    'snookernepal.com',
+    'www.snookernepal.com',
+]
 
 # Application definition
 INSTALLED_APPS = [
