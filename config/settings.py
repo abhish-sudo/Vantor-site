@@ -28,6 +28,7 @@ ALLOWED_HOSTS = [
     'vantor-site-3.onrender.com',
     'snookernepal.com',
     'www.snookernepal.com',
+    '127.0.0.1',
 ]
 
 # Application definition

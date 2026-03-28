@@ -787,7 +787,7 @@
                                         <span class="order-total-value">NPR {{ order.total }}</span>
                                     </div>
 
-                                    {% if order.is_paid %}
+                                    {% comment %} {% if order.is_paid %}
                                         {% if order.payment_method == 'stripe' %}
                                             <span class="order-payment-chip chip-stripe">✓ Stripe</span>
                                         {% elif order.payment_method == 'esewa' %}
@@ -801,7 +801,7 @@
                                         <span class="order-payment-chip chip-pending">⏳ Awaiting Payment</span>
                                     {% else %}
                                         <span class="order-payment-chip chip-cod">◎ Pending</span>
-                                    {% endif %}
+                                    {% endif %} {% endcomment %}
                                 </div>
 
                                 <div class="order-footer-right">

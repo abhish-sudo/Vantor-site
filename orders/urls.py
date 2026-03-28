@@ -25,7 +25,7 @@ urlpatterns = [
     path('esewa/failure/', views.esewa_failure, name='failure'),        # eSewa callback URL
 
     # ── Stripe ─────────────────────────────────────────────────
-    path('stripe/pay/<uuid:order_number>/', views.stripe_payment_page, name='stripe_payment_page'),
+    # path('stripe/pay/<uuid:order_number>/', views.stripe_payment_page, name='stripe_payment_page'),
     path('stripe/<uuid:order_number>/', views.stripe_checkout, name='stripe_checkout'),
     path('stripe/success/', views.stripe_success, name='stripe_success'),
     path('stripe/cancel/<uuid:order_number>/', views.stripe_cancel, name='stripe_cancel'),
